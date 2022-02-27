@@ -19,9 +19,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore    
     - name: Build
-      run: dotnet build --configuration $config --no-restore                  
-    - name: Test     
-      run: dotnet test --no-restore --no-build --configuration $config       
+      run: dotnet build --configuration $config --no-restore                       
   
   deploy:
     needs: build
@@ -36,8 +34,8 @@ jobs:
     - name: Build and push
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: heroku container:push -a zbyrach-api web 
+      run: heroku container:push -a russian-sites-status-api web 
     - name: Release
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: cd src/Zbyrach.Api && heroku container:release -a zbyrach-api web 
+      run: heroku container:release -a russian-sites-status-api web 

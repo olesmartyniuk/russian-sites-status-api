@@ -7,11 +7,12 @@ public class StatusCakeService
 {
     private readonly HttpClient _httpClient;
 
-    public StatusCakeService()
+    public StatusCakeService(IConfiguration configuration)
     {
+        var apiKey = configuration["STATUS_CAKE_API_KEY"];
+
         _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", "DqBjkewguSJfdHfDCMeE"); // TODO: move API key to the settings
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
     }
     public async Task<UptimeChecks> GetAllStatuses()
     {
