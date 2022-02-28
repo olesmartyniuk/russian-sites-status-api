@@ -51,7 +51,7 @@ public class StatusFetcherBackgroundService : BackgroundService
                 Name = data.name,
                 Status = data.status,
                 TestType = data.test_type,
-                Uptime = $"{data.uptime} %",
+                Uptime = data.uptime,
                 WebsiteUrl = data.website_url,
                 DoNotFind = data.do_not_find,
                 LastTestedAt = data.last_tested_at,
@@ -79,7 +79,7 @@ public class StatusFetcherBackgroundService : BackgroundService
             Name = status.name,
             Status = status.status,
             TestType = status.test_type,
-            Uptime = $"{status.uptime} %",
+            Uptime = status.uptime,
             WebsiteUrl = status.website_url
         });
 
