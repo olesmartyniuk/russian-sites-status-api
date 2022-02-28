@@ -1,4 +1,4 @@
-namespace RussianSitesStatus.Models;
+namespace RussianSitesStatus.Models.Dtos;
 
 public class GetStatusResponse
 {

@@ -21,8 +21,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
-
-builder.WebHost.UseKestrel((context, options) =>
+builder.WebHost.UseKestrel((_, options) =>
 {
     var port = Environment.GetEnvironmentVariable("PORT");
     if (!string.IsNullOrEmpty(port))
