@@ -7,7 +7,7 @@ public class Site
     public string TestType { get; set; }
     public string WebsiteUrl { get; set; }
     public string Status { get; set; }
-    public string Uptime { get; set; }
+    public double Uptime { get; set; }
 }
 
 public class SiteDetails : Site
