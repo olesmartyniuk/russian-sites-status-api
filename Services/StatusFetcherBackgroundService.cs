@@ -9,6 +9,7 @@ public class StatusFetcherBackgroundService : BackgroundService
     private readonly Storage<Site> _liteStatusStorage;
     private readonly Storage<SiteDetails> _fullStatusStorage;
     private readonly ILogger<StatusFetcherBackgroundService> _logger;
+
     public StatusFetcherBackgroundService(
         StatusCakeService statusCakeService,
         Storage<Site> liteStatusStorage,
@@ -48,7 +49,7 @@ public class StatusFetcherBackgroundService : BackgroundService
             var siteStatus = new SiteDetails
             {
                 Id = data.id,
-                Name = data.name,
+                Name = NormalizeName(data.name),
                 Status = data.status,
                 TestType = data.test_type,
                 Uptime = data.uptime,
@@ -76,7 +77,7 @@ public class StatusFetcherBackgroundService : BackgroundService
         var siteStatuses = statuses.data.Select(status => new Site
         {
             Id = status.id,
-            Name = status.name,
+            Name = NormalizeName(status.name),
             Status = status.status,
             TestType = status.test_type,
             Uptime = status.uptime,
@@ -86,5 +87,30 @@ public class StatusFetcherBackgroundService : BackgroundService
         _liteStatusStorage.ReplaceAll(siteStatuses);
 
         return siteStatuses;
+    }
+
+    private string NormalizeName(string name)
+    {
+        if (name.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            name = name.Replace("http://", string.Empty);
+        }
+
+        if (name.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            name = name.Replace("https://", string.Empty);
+        }
+
+        if (name.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+        {
+            name = name.Replace("www.", string.Empty);
+        }
+
+        if (name.EndsWith("/", StringComparison.OrdinalIgnoreCase))
+        {
+            name = name.TrimEnd('/');
+        }
+
+        return name;
     }
 }
