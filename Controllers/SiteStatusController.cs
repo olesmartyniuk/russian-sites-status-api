@@ -7,17 +7,17 @@ namespace RussianSitesStatus.Controllers;
 [ApiController]
 public class SiteStatusController : ControllerBase
 {
-    private readonly Storage<SiteStatus> _liteStatusStorage;
-    private readonly Storage<SiteStatusFull> _fullStatusStorage;
+    private readonly Storage<Site> _liteStatusStorage;
+    private readonly Storage<SiteDetails> _fullStatusStorage;
 
-    public SiteStatusController(Storage<SiteStatus> liteStatusStorage, Storage<SiteStatusFull> fullStatusStorage)
+    public SiteStatusController(Storage<Site> liteStatusStorage, Storage<SiteDetails> fullStatusStorage)
     {
         _liteStatusStorage = liteStatusStorage;
         _fullStatusStorage = fullStatusStorage;
     }
 
     [HttpGet("api/status")]
-    public List<SiteStatus> GetAllStatuses()
+    public List<Site> GetAllStatuses()
     {
         return _liteStatusStorage
             .GetAll()
@@ -25,7 +25,7 @@ public class SiteStatusController : ControllerBase
     }
 
     [HttpGet("api/status/{id}")]
-    public ActionResult<SiteStatusFull> GetStatuse(string id)
+    public ActionResult<SiteDetails> GetStatuse(string id)
     {
         var result = _fullStatusStorage.Get(id);
 

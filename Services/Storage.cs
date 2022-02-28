@@ -1,7 +1,7 @@
 using RussianSitesStatus.Models;
 
 namespace RussianSitesStatus.Services;
-public class Storage<T> where T : SiteStatus
+public class Storage<T> where T : Site
 {
     private readonly Dictionary<string, T> _items = new Dictionary<string, T>();
 

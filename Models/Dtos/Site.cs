@@ -1,6 +1,6 @@
 namespace RussianSitesStatus.Models;
 
-public class SiteStatus
+public class Site
 {
     public string Id { get; set; }
     public string Name { get; set; }
@@ -10,7 +10,7 @@ public class SiteStatus
     public string Uptime { get; set; }
 }
 
-public class SiteStatusFull : SiteStatus
+public class SiteDetails : Site
 {
     public bool DoNotFind { get; set; }
     public List<Server> Servers { get; set; }

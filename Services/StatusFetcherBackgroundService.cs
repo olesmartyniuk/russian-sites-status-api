@@ -6,13 +6,13 @@ public class StatusFetcherBackgroundService : BackgroundService
 {
     private const int WAIT_TO_NEXT_CHECK_SECONDS = 15;
     private readonly StatusCakeService _statusCakeService;
-    private readonly Storage<SiteStatus> _liteStatusStorage;
-    private readonly Storage<SiteStatusFull> _fullStatusStorage;
+    private readonly Storage<Site> _liteStatusStorage;
+    private readonly Storage<SiteDetails> _fullStatusStorage;
     private readonly ILogger<StatusFetcherBackgroundService> _logger;
     public StatusFetcherBackgroundService(
         StatusCakeService statusCakeService,
-        Storage<SiteStatus> liteStatusStorage,
-        Storage<SiteStatusFull> fullStatusStorage,
+        Storage<Site> liteStatusStorage,
+        Storage<SiteDetails> fullStatusStorage,
         ILogger<StatusFetcherBackgroundService> logger)
     {
         _statusCakeService = statusCakeService;
@@ -39,13 +39,13 @@ public class StatusFetcherBackgroundService : BackgroundService
         }
     }
 
-    private async Task UpdateFullStatuses(IEnumerable<SiteStatus> statuses)
+    private async Task UpdateFullStatuses(IEnumerable<Site> statuses)
     {
         foreach (var status in statuses)
         {
             var uptimeCheck = await _statusCakeService.GetStatus(status.Id);
             var data = uptimeCheck.data;
-            var siteStatus = new SiteStatusFull
+            var siteStatus = new SiteDetails
             {
                 Id = data.id,
                 Name = data.name,
@@ -70,11 +70,11 @@ public class StatusFetcherBackgroundService : BackgroundService
         }
     }
 
-    private async Task<IEnumerable<SiteStatus>> UpdateLiteStatuses()
+    private async Task<IEnumerable<Site>> UpdateLiteStatuses()
     {
         var statuses = await _statusCakeService.GetAllStatuses();
 
-        var siteStatuses = statuses.data.Select(status => new SiteStatus
+        var siteStatuses = statuses.data.Select(status => new Site
         {
             Id = status.id,
             Name = status.name,

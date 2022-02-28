@@ -6,8 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddSingleton<StatusCakeService>();
-builder.Services.AddSingleton<Storage<SiteStatus>>();
-builder.Services.AddSingleton<Storage<SiteStatusFull>>();
+builder.Services.AddSingleton<Storage<Site>>();
+builder.Services.AddSingleton<Storage<SiteDetails>>();
 builder.Services.AddHostedService<StatusFetcherBackgroundService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

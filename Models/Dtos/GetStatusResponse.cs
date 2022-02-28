@@ -2,5 +2,5 @@ namespace RussianSitesStatus.Models;
 
 public class GetStatusResponse
 {
-    public SiteStatusFull SiteStatusFull { get; set; }
+    public SiteDetails SiteStatusFull { get; set; }
 }
