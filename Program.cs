@@ -12,6 +12,16 @@ builder.Services.AddHostedService<StatusFetcherBackgroundService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy",
+        builder => builder
+            .AllowAnyOrigin()            
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+});
+
 
 builder.WebHost.UseKestrel((context, options) =>
 {
@@ -24,6 +34,7 @@ builder.WebHost.UseKestrel((context, options) =>
 
 // Configure the HTTP request pipeline.
 var app = builder.Build();
+app.UseCors("CorsPolicy");
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHttpsRedirection();
