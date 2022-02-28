@@ -59,7 +59,6 @@ public class StatusFetcherBackgroundService : BackgroundService
                 Servers = data.servers.Select(s => new Server
                 {
                     Description = s.description,
-                    Ipv4 = s.ipv4,
                     Region = s.region,
                     Status = s.status
                 }).ToList(),

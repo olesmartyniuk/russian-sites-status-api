@@ -24,5 +24,4 @@ public class Server
     public string Description { get; set; }
     public string Region { get; set; }
     public string Status { get; set; }
-    public string Ipv4 { get; set; }
 }
