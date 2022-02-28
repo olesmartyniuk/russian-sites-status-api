@@ -1,6 +1,7 @@
 using RussianSitesStatus.Models;
+using RussianSitesStatus.Services;
 
-namespace RussianSitesStatus.Services;
+namespace RussianSitesStatus.BackgroundServices;
 
 public class StatusFetcherBackgroundService : BackgroundService
 {
@@ -74,7 +75,7 @@ public class StatusFetcherBackgroundService : BackgroundService
     {
         var statuses = await _statusCakeService.GetAllStatuses();
 
-        var siteStatuses = statuses.data.Select(status => new Site
+        var siteStatuses = statuses.Select(status => new Site
         {
             Id = status.id,
             Name = status.name,
