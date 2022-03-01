@@ -1,23 +1,28 @@
+using Microsoft.Extensions.Options;
+using RussianSitesStatus.Configuration;
 using RussianSitesStatus.Services;
 
 namespace RussianSitesStatus.BackgroundServices;
 
 public class SyncSitesBackgroundService : BackgroundService
 {
-    private const int WAIT_TO_NEXT_CHECK_SECONDS = 25;
-    private const int WAIT_BEFORE_THE_FIRST_ITARATION_SECONDS = 20;
+    private readonly SyncSitesConfiguration _syncSitesConfiguration;
 
     private readonly SyncSitesService _syncSitesService;
     private readonly ILogger<StatusFetcherBackgroundService> _logger;
-    public SyncSitesBackgroundService(ILogger<StatusFetcherBackgroundService> logger, SyncSitesService syncSitesService)
+    public SyncSitesBackgroundService(ILogger<StatusFetcherBackgroundService> logger,
+        SyncSitesService syncSitesService,
+        IServiceProvider serviceProvider)
     {
         _logger = logger;
         _syncSitesService = syncSitesService;
+
+         _syncSitesConfiguration = serviceProvider.GetRequiredService<IOptions<SyncSitesConfiguration>>().Value;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(WAIT_BEFORE_THE_FIRST_ITARATION_SECONDS), stoppingToken);
+        await Task.Delay(TimeSpan.FromSeconds(_syncSitesConfiguration.WaitBeforeFirstIterationSeconds), stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -30,7 +35,7 @@ public class SyncSitesBackgroundService : BackgroundService
                 _logger.LogError(e, "Unhandled exception while fetching statuses");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(WAIT_TO_NEXT_CHECK_SECONDS), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(_syncSitesConfiguration.WaitToNextCheckSeconds), stoppingToken);
         }
     }
 }
