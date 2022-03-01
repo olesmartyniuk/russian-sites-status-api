@@ -12,17 +12,17 @@ public class PaginationFilter
     public int PageSize { get; }
 
     [BindNever]
-    public int CountToSkip => (PageNumber - 1) * PageSize;
+    public int CountToSkip => PageNumber * PageSize;
     
     public PaginationFilter()
     {
-        PageNumber = 1;
+        PageNumber = 0;
         PageSize = 1000;
     }
     
     public PaginationFilter(int pageNumber,int pageSize)
     {
-        PageNumber = pageNumber < 1 ? 1 : pageNumber;
+        PageNumber = pageNumber < 0 ? 0 : pageNumber;
         PageSize = pageSize > 1000 ? 1000 : pageSize;
     }
 }
