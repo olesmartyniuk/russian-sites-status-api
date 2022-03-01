@@ -6,7 +6,10 @@ namespace RussianSitesStatus.BackgroundServices;
 
 public class StatusFetcherBackgroundService : BackgroundService
 {
-    private const int WAIT_TO_NEXT_CHECK_SECONDS = 15;
+    private const int WAIT_TO_NEXT_CHECK_SECONDS = 30;
+    private const int REQUESTS_PER_SECOND_LIMIT = 10;
+    private const int ONE_SECOND = 1000;
+
     private readonly StatusCakeService _statusCakeService;
     private readonly Storage<Site> _liteStatusStorage;
     private readonly Storage<SiteDetails> _fullStatusStorage;
@@ -44,34 +47,39 @@ public class StatusFetcherBackgroundService : BackgroundService
 
     private async Task UpdateFullStatuses(IEnumerable<Site> statuses)
     {
-        foreach (var status in statuses)
+        foreach (var batch in statuses.Chunk(REQUESTS_PER_SECOND_LIMIT))
         {
-            var uptimeCheck = await _statusCakeService.GetStatus(status.Id);
-            var history = await GetHistory(status);
-
-            var data = uptimeCheck.data;
-            var siteStatus = new SiteDetails
+            foreach (var status in batch)
             {
-                Id = data.id,
-                Name = data.name.NormalizeSiteName(),
-                Status = data.status,
-                TestType = data.test_type,
-                Uptime = data.uptime,
-                WebsiteUrl = data.website_url,
-                DoNotFind = data.do_not_find,
-                LastTestedAt = data.last_tested_at,
-                Processing = data.processing,
-                Servers = data.servers.Select(s => new Server
-                {
-                    Region = s.region,
-                    Status = GetStatusByRegion(history, s.region_code),
-                    StatusCode = GetStatusCodeByRegion(history, s.region_code),
-                    LastTestedAt = GetLastTestedAtByRegion(history, s.region_code)
-                }).ToList(),
-                Timeout = data.timeout
-            };
+                var uptimeCheck = await _statusCakeService.GetStatus(status.Id);
+                var history = await GetHistory(status);
 
-            _fullStatusStorage.Replace(siteStatus);
+                var data = uptimeCheck.data;
+                var siteStatus = new SiteDetails
+                {
+                    Id = data.id,
+                    Name = data.name.NormalizeSiteName(),
+                    Status = data.status,
+                    TestType = data.test_type,
+                    Uptime = data.uptime,
+                    WebsiteUrl = data.website_url,
+                    DoNotFind = data.do_not_find,
+                    LastTestedAt = data.last_tested_at,
+                    Processing = data.processing,
+                    Servers = data.servers.Select(s => new Server
+                    {
+                        Region = s.region,
+                        Status = GetStatusByRegion(history, s.region_code),
+                        StatusCode = GetStatusCodeByRegion(history, s.region_code),
+                        LastTestedAt = GetLastTestedAtByRegion(history, s.region_code)
+                    }).ToList(),
+                    Timeout = data.timeout
+                };
+
+                _fullStatusStorage.Replace(siteStatus);                
+            }
+
+            await Task.Delay(ONE_SECOND); // Sleep to avoid 429
         }
 
         string GetStatusByRegion(Dictionary<string, UptimeCheckHistoryItem> history, string regionCode)
