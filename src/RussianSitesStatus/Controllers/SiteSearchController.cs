@@ -7,19 +7,19 @@ namespace RussianSitesStatus.Controllers;
 [ApiController]
 public class SiteSearchController : ControllerBase
 {
-    private readonly Storage<Site> _liteStatusStorage;
+    private readonly Storage<SiteDetails> _fullStatusStorage;
 
-    public SiteSearchController(Storage<Site> liteStatusStorage)
+    public SiteSearchController(Storage<SiteDetails> fullStatusStorage)
     {
-        _liteStatusStorage = liteStatusStorage;
+        _fullStatusStorage = fullStatusStorage;
     }
 
     [HttpGet("api/sites/search")]
     public ActionResult<IEnumerable<Site>> Search([FromQuery] string url, [FromQuery] PaginationFilter filter)
     {
-        if (url.Length < 2)
+        if (url?.Length < 2)
             return BadRequest($"The input url: {url} should contains more than 1 symbol");
-        var result = _liteStatusStorage.Search(url, filter);
+        var result = _fullStatusStorage.Search(url, filter);
         return Ok(result);
     }
 }
