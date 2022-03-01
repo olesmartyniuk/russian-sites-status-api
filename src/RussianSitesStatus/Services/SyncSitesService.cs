@@ -8,6 +8,8 @@ using System.Net.Http.Headers;
 namespace RussianSitesStatus.Services;
 public class SyncSitesService
 {
+    private const int BATCH_SIZE = 10;
+
     private readonly HttpClient _httpClient;
     private readonly IEnumerable<ISiteSource> _siteSources;
     private readonly StatusCakeService _statusCakeService;
@@ -36,26 +38,37 @@ public class SyncSitesService
         var notExistingSites = GetUptimeCheckItemToBeAddedFromLocalStorage(allSitesFromSources);
 
         var taskList = new List<Task>();
-        foreach (var item in notExistingSites.Take(1))//TODOVK: Sleep to avoid 429
+
+        foreach (var batch in notExistingSites.Chunk(BATCH_SIZE))
         {
-            var action = async () =>
+            foreach (var item in batch)
             {
-                var newUptimeCheckItem = new UptimeCheckItem
+                var action = async () =>
                 {
-                    website_url = item,
-                    name = item.NormalizeSiteName(),
-                    check_rate = Rate.Defaul,
-                    test_type = TestType.HTTP,
-                    regions = new List<string> { "singapore", "novosibirsk" } //TODOVK: Provide list of regions, exists 100500 diff regions
+                    var newUptimeCheckItem = BuildNewUptimeCheckItem(item);
+                    await _statusCakeService.AddUptimeCheckItemAsync(newUptimeCheckItem);
                 };
 
-                await _statusCakeService.AddUptimeCheckItemAsync(newUptimeCheckItem);
-            };
+                taskList.Add(Task.Run(action));
+            }
 
-            taskList.Add(Task.Run(action));
+            await Task.Delay(1000);// Sleep to avoid 429
         }
 
         await Task.WhenAll(taskList);
+    }
+
+    private static UptimeCheckItem BuildNewUptimeCheckItem(string url)
+    {
+        var newUptimeCheckItem = new UptimeCheckItem
+        {
+            website_url = url,
+            name = url.NormalizeSiteName(),
+            check_rate = Rate.Defaul,
+            test_type = TestType.HTTP,
+            regions = new List<string> { "singapore", "novosibirsk" } //TODOVK: Provide list of regions, exists 100500 diff regions
+        };
+        return newUptimeCheckItem;
     }
 
     private async Task<IEnumerable<string>> GetSitesFromAllSources()
