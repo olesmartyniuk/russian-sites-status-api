@@ -8,11 +8,6 @@ public class Site
     public string WebsiteUrl { get; set; }
     public string Status { get; set; }
     public double Uptime { get; set; }
-
-    internal object Where()
-    {
-        throw new NotImplementedException();
-    }
 }
 
 public class SiteDetails : Site
@@ -25,8 +20,9 @@ public class SiteDetails : Site
 }
 
 public class Server
-{
-    public string Description { get; set; }
+{    
     public string Region { get; set; }
     public string Status { get; set; }
+    public int StatusCode { get; internal set; }
+    public DateTime LastTestedAt { get; set; }    
 }

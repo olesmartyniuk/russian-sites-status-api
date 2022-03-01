@@ -47,6 +47,8 @@ public class StatusFetcherBackgroundService : BackgroundService
         foreach (var status in statuses)
         {
             var uptimeCheck = await _statusCakeService.GetStatus(status.Id);
+            var history = await GetHistory(status);
+
             var data = uptimeCheck.data;
             var siteStatus = new SiteDetails
             {
@@ -61,15 +63,82 @@ public class StatusFetcherBackgroundService : BackgroundService
                 Processing = data.processing,
                 Servers = data.servers.Select(s => new Server
                 {
-                    Description = s.description,
                     Region = s.region,
-                    Status = s.status
+                    Status = GetStatusByRegion(history, s.region_code),
+                    StatusCode = GetStatusCodeByRegion(history, s.region_code),
+                    LastTestedAt = GetLastTestedAtByRegion(history, s.region_code)
                 }).ToList(),
                 Timeout = data.timeout
             };
 
             _fullStatusStorage.Replace(siteStatus);
         }
+
+        string GetStatusByRegion(Dictionary<string, UptimeCheckHistoryItem> history, string regionCode)
+        {
+            if (!history.ContainsKey(regionCode))
+            {
+                return string.Empty;
+            }
+
+            var statusCode = history[regionCode].status_code;
+
+            if (statusCode >= 200 && statusCode <= 300)
+            {
+                return "up";
+            }
+
+            return "down";
+        }
+
+        int GetStatusCodeByRegion(Dictionary<string, UptimeCheckHistoryItem> history, string regionCode)
+        {
+            if (!history.ContainsKey(regionCode))
+            {
+                return -1;
+            }
+
+            return history[regionCode].status_code;
+        }
+
+        DateTime GetLastTestedAtByRegion(Dictionary<string, UptimeCheckHistoryItem> history, string regionCode)
+        {
+            if (!history.ContainsKey(regionCode))
+            {
+                return default(DateTime);
+            }
+
+            return history[regionCode].created_at;
+        }
+    }
+
+    private async Task<Dictionary<string, UptimeCheckHistoryItem>> GetHistory(Site status)
+    {
+        var result = new Dictionary<string, UptimeCheckHistoryItem>();
+        var history = await _statusCakeService.GetHistory(status.Id);
+
+        foreach (var historyItem in history)
+        {
+            if (!result.ContainsKey(historyItem.location))
+            {
+                result.Add(historyItem.location, historyItem);
+            }
+        }
+
+        return result
+            .Values
+            .ToDictionary(value => GetRegionByLocation(value.location));
+    }
+
+    private string GetRegionByLocation(string location)
+    {
+        // TODO: extend this map
+        return location switch
+        {
+            "RU3" => "novosibirsk",
+            "SG1" => "singapore",
+            _ => string.Empty
+        };
     }
 
     private async Task<IEnumerable<Site>> UpdateLiteStatuses()
@@ -90,6 +159,4 @@ public class StatusFetcherBackgroundService : BackgroundService
 
         return siteStatuses;
     }
-
-
 }
