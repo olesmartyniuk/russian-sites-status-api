@@ -136,7 +136,22 @@ public class StatusFetcherBackgroundService : BackgroundService
         return location switch
         {
             "RU3" => "novosibirsk",
+            "IND1" => "",
             "SG1" => "singapore",
+            "SG2" => "singapore",
+            "SWE1" => "stockholm",
+            "UG9" => "",
+            "DEFR-1" => "frankfurt",
+            "BR1" => "sao-paulo",
+            "JP1" => "tokyo",
+            "ZA3" => "",
+            "PL2" => "warsaw",
+            "HK" => "hong-kong",
+            "MEX" => "mexico-city",
+            "UKBOB" => "london",
+            "TORO3" => "toronto",
+            "AU5" => "sydney",
+
             _ => string.Empty
         };
     }
