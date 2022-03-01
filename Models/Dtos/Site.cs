@@ -7,7 +7,7 @@ public class Site
     public string TestType { get; set; }
     public string WebsiteUrl { get; set; }
     public string Status { get; set; }
-    public string Uptime { get; set; }
+    public double Uptime { get; set; }
 }
 
 public class SiteDetails : Site
@@ -24,5 +24,4 @@ public class Server
     public string Description { get; set; }
     public string Region { get; set; }
     public string Status { get; set; }
-    public string Ipv4 { get; set; }
 }
