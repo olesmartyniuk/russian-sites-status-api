@@ -1,3 +1,4 @@
+using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Services;
 
@@ -50,7 +51,7 @@ public class StatusFetcherBackgroundService : BackgroundService
             var siteStatus = new SiteDetails
             {
                 Id = data.id,
-                Name = NormalizeName(data.name),
+                Name = data.name.NormalizeSiteName(),
                 Status = data.status,
                 TestType = data.test_type,
                 Uptime = data.uptime,
@@ -78,7 +79,7 @@ public class StatusFetcherBackgroundService : BackgroundService
         var siteStatuses = statuses.Select(status => new Site
         {
             Id = status.id,
-            Name = NormalizeName(status.name),
+            Name = status.name.NormalizeSiteName(),
             Status = status.status,
             TestType = status.test_type,
             Uptime = status.uptime,
@@ -90,28 +91,5 @@ public class StatusFetcherBackgroundService : BackgroundService
         return siteStatuses;
     }
 
-    private string NormalizeName(string name)
-    {
-        if (name.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-        {
-            name = name.Replace("http://", string.Empty);
-        }
 
-        if (name.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            name = name.Replace("https://", string.Empty);
-        }
-
-        if (name.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
-        {
-            name = name.Replace("www.", string.Empty);
-        }
-
-        if (name.EndsWith("/", StringComparison.OrdinalIgnoreCase))
-        {
-            name = name.TrimEnd('/');
-        }
-
-        return name;
-    }
 }

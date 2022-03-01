@@ -43,7 +43,7 @@ public class SyncSitesService
                 var newUptimeCheckItem = new UptimeCheckItem
                 {
                     website_url = item,
-                    name = new Uri(item).AbsoluteUri,
+                    name = item.NormalizeSiteName(),
                     check_rate = Rate.Defaul,
                     test_type = TestType.HTTP,
                     regions = new List<string> { "singapore", "novosibirsk" } //TODOVK: Provide list of regions, exists 100500 diff regions
