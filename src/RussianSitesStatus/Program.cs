@@ -2,6 +2,7 @@ using RussianSitesStatus.Services;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.BackgroundServices;
 using RussianSitesStatus.Services.Contracts;
+using RussianSitesStatus.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
+builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
 
 builder.WebHost.UseKestrel((context, options) =>
 {
