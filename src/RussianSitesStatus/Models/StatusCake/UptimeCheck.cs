@@ -34,6 +34,7 @@ public class UptimeCheckItem
     public DateTime last_tested_at { get; set; }
     public string next_location { get; set; }
     public List<string> status_codes { get; set; }
+    public List<string> regions { get; set; }
 }
 
 public class UptimeCheck
