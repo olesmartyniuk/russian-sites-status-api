@@ -12,7 +12,20 @@ namespace RussianSitesStatus.Services
             var request = new RestRequest("sites.json", Method.Get);
             var response = await client.GetAsync(request);
 
-            return JsonSerializer.Deserialize<IEnumerable<IncourseSiteResponce>>(response.Content).Where(s => s.atack == 1).Select(s => s.url);
+            var allSites = JsonSerializer.Deserialize<IEnumerable<IncourseSiteResponce>>(response.Content);
+            
+            var relevantSites = allSites
+                .Where(s => s.atack == 1)
+                .ToList();
+
+            const int MaxNumberOfSites = 100;
+            var notRelevantSites = allSites
+                .Where(s => s.atack == 0)
+                .Take(MaxNumberOfSites - relevantSites.Count);
+
+            relevantSites.AddRange(notRelevantSites);
+            
+            return relevantSites.Select(s => s.url);
         }
 
         private class IncourseSiteResponce
