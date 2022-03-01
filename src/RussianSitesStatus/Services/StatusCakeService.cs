@@ -31,8 +31,8 @@ public class StatusCakeService
 
             totalCount = result.metadata.total_count;
             pageNumber++;
-        } while (resultSet.Count < totalCount);
-
+        }
+        while (resultSet.Count < totalCount);
 
         return resultSet;
     }
@@ -46,7 +46,7 @@ public class StatusCakeService
 
     public async Task<UptimeCheck> GetStatus(string id)
     {
-        var response = await _httpClient.GetAsync($"https://api.statuscake.com/v1/uptime/{id}");
+        var response = await _httpClient.GetAsync(Endpoints.GetStatus(id));
         var payload = await response.Content.ReadAsStringAsync();
 
         return JsonSerializer.Deserialize<UptimeCheck>(payload);
@@ -59,6 +59,6 @@ public class StatusCakeService
 
         public static string AddUptimeChecksItem => $"{Host}/{ApiVersion}/uptime";
         public static string GetAllStatuses(int pageNumber, int limit) => $"{Host}/{ApiVersion}/uptime?page={pageNumber}&limit={limit}";
-
+        public static string GetStatus(string id) => $"{Host}/{ApiVersion}/uptime/{id}";
     }
 }

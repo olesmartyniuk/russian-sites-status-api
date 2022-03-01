@@ -39,7 +39,7 @@ public class SyncSitesService
 
         var taskList = new List<Task>();
 
-        foreach (var batch in notExistingSites.Chunk(BATCH_SIZE))
+        foreach (var batch in notExistingSites.Take(1).Chunk(BATCH_SIZE)) //TODOVK delete Take(1)
         {
             foreach (var item in batch)
             {
