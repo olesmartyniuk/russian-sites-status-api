@@ -44,6 +44,13 @@ public class StatusCakeService
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task DeleteUptimeCheckItemAsync(string id)
+    {
+        var response = await _httpClient.DeleteAsync(Endpoints.DeleteUptimeCheckItem(id));
+     
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<UptimeCheck> GetStatus(string id)
     {
         var response = await _httpClient.GetAsync(Endpoints.GetStatus(id));
@@ -51,6 +58,7 @@ public class StatusCakeService
 
         return JsonSerializer.Deserialize<UptimeCheck>(payload);
     }
+
 
     public static class Endpoints
     {
@@ -60,5 +68,6 @@ public class StatusCakeService
         public static string AddUptimeChecksItem => $"{Host}/{ApiVersion}/uptime";
         public static string GetAllStatuses(int pageNumber, int limit) => $"{Host}/{ApiVersion}/uptime?page={pageNumber}&limit={limit}";
         public static string GetStatus(string id) => $"{Host}/{ApiVersion}/uptime/{id}";
+        public static string DeleteUptimeCheckItem(string id) => $"{Host}/{ApiVersion}/uptime/{id}";
     }
 }

@@ -35,21 +35,49 @@ public class SyncSitesService
     public async Task SyncAsync()
     {
         var allSitesFromSources = await GetSitesFromAllSources();
+
+        await DeleteOldSitesAsync(allSitesFromSources);
+        await AddNewSites(allSitesFromSources);
+    }
+
+    private async Task DeleteOldSitesAsync(IEnumerable<string> allSitesFromSources)
+    {
+        var allExistingSites = _liteStatusStorage.GetAll();
+        var newSites = GetUptimeCheckItemToBeAddedFromLocalStorage(allSitesFromSources);
+
+        var numberSiteToBeDeleted = (allExistingSites.Count() + newSites.Count()) - 100;
+        if (numberSiteToBeDeleted > 0)
+        {
+            var uptimeCheckItemIdsToBeDeleted = GetUptimeCheckItemIdsToBeDeleted(allSitesFromSources, numberSiteToBeDeleted);
+            var action = async (string siteId) =>
+            {
+                await _statusCakeService.DeleteUptimeCheckItemAsync(siteId);
+            };
+
+            await ProccesBatchAsync(uptimeCheckItemIdsToBeDeleted, action);
+        }
+    }
+
+    private async Task AddNewSites(IEnumerable<string> allSitesFromSources)
+    {
         var notExistingSites = GetUptimeCheckItemToBeAddedFromLocalStorage(allSitesFromSources);
+        var action = async (string siteUrl) =>
+        {
+            var newUptimeCheckItem = BuildNewUptimeCheckItem(siteUrl);
+            await _statusCakeService.AddUptimeCheckItemAsync(newUptimeCheckItem);
+        };
 
+        await ProccesBatchAsync(notExistingSites, action);
+    }
+
+    private async Task ProccesBatchAsync(IEnumerable<string> notExistingSites, Func<string, Task> action)
+    {
         var taskList = new List<Task>();
-
-        foreach (var batch in notExistingSites.Take(1).Chunk(BATCH_SIZE)) //TODOVK delete Take(1)
+        foreach (var batch in notExistingSites.Chunk(BATCH_SIZE)) //TODOVK delete Take(1)
         {
             foreach (var item in batch)
             {
-                var action = async () =>
-                {
-                    var newUptimeCheckItem = BuildNewUptimeCheckItem(item);
-                    await _statusCakeService.AddUptimeCheckItemAsync(newUptimeCheckItem);
-                };
-
-                taskList.Add(Task.Run(action));
+                taskList.Add(action(item));
             }
 
             await Task.Delay(1000);// Sleep to avoid 429
@@ -102,5 +130,12 @@ public class SyncSitesService
         var sites = _liteStatusStorage.GetAll();
         var notExistingSites = allSitesFromSources.Select(s => s.NormilizeStringUrl()).Except(sites.Select(s => s.WebsiteUrl.NormilizeStringUrl()));
         return notExistingSites;
+    }
+
+    private IEnumerable<string> GetUptimeCheckItemIdsToBeDeleted(IEnumerable<string> allSitesFromSources, int size)
+    {
+        var sites = _liteStatusStorage.GetAll();
+        var oldSites = sites.Select(s => s.WebsiteUrl.NormilizeStringUrl()).Except(allSitesFromSources.Select(s => s.NormilizeStringUrl())).Take(size);
+        return sites.Where(t => oldSites.Contains(t.WebsiteUrl.NormilizeStringUrl())).Select(t => t.Id);
     }
 }
