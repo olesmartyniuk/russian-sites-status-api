@@ -125,8 +125,8 @@ public class StatusFetcherBackgroundService : BackgroundService
             }
         }
 
-        return result
-            .Values
+        return result.Values
+            .Where(value => !string.IsNullOrEmpty(GetRegionByLocation(value.location)))
             .ToDictionary(value => GetRegionByLocation(value.location));
     }
 
