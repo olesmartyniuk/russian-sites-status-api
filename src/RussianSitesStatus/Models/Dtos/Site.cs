@@ -19,16 +19,16 @@ public class Site
 
 public class SiteDetails : Site
 {
-    public bool DoNotFind { get; set; }
     public List<Server> Servers { get; set; }
-    public bool Processing { get; set; }
     public int Timeout { get; set; }
     public DateTime LastTestedAt { get; set; }
 }
 
 public class Server
-{
-    public string Description { get; set; }
+{    
     public string Region { get; set; }
+    public string RegionCode { get; set; }
     public string Status { get; set; }
+    public int StatusCode { get; internal set; }
+    public DateTime LastTestedAt { get; set; }    
 }

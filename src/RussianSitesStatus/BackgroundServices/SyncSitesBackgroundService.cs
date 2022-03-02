@@ -16,8 +16,8 @@ public class SyncSitesBackgroundService : BackgroundService
     {
         _logger = logger;
         _syncSitesService = syncSitesService;
-
-         _syncSitesConfiguration = serviceProvider.GetRequiredService<IOptions<SyncSitesConfiguration>>().Value;
+        _syncSitesConfiguration = serviceProvider
+            .GetRequiredService<IOptions<SyncSitesConfiguration>>().Value;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
