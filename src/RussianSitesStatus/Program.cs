@@ -3,33 +3,24 @@ using RussianSitesStatus.Models;
 using RussianSitesStatus.BackgroundServices;
 using RussianSitesStatus.Services.Contracts;
 using RussianSitesStatus.Configuration;
+using Microsoft.AspNetCore.Authentication;
+using RussianSitesStatus.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
-builder.Services.AddSingleton<StatusCakeService>();
-builder.Services.AddSingleton<Storage<Site>>();
-builder.Services.AddSingleton<Storage<SiteDetails>>();
-
-
-builder.Services.AddSingleton<SyncSitesService>();
-builder.Services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
-
-builder.Services.AddHostedService<StatusFetcherBackgroundService>();
-builder.Services.AddHostedService<SyncSitesBackgroundService>();
+RegisteServices(builder.Services);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy",
-        builder => builder
-            .AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader());
-});
+
+
+builder.Services
+    .AddAuthentication()
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>(Scheme.ApiKeyAuthScheme, _ => { });
+
+AddCors(builder.Services);
 
 builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
 
@@ -51,3 +42,30 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+
+static void RegisteServices(IServiceCollection services)
+{
+    services.AddSingleton<StatusCakeService>();
+    services.AddSingleton<Storage<Site>>();
+    services.AddSingleton<Storage<SiteDetails>>();
+
+    services.AddSingleton<UpCheckService>();
+    services.AddSingleton<SyncSitesService>();
+    services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
+
+    services.AddHostedService<StatusFetcherBackgroundService>();
+    services.AddHostedService<SyncSitesBackgroundService>();
+}
+
+static void AddCors(IServiceCollection services)
+{
+    services.AddCors(options =>
+    {
+        options.AddPolicy("CorsPolicy",
+            builder => builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+    });
+}

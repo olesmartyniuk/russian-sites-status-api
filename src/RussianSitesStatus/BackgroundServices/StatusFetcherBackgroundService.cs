@@ -83,7 +83,8 @@ public class StatusFetcherBackgroundService : BackgroundService
             Status = status.status,
             TestType = status.test_type,
             Uptime = status.uptime,
-            WebsiteUrl = status.website_url
+            WebsiteUrl = status.website_url,
+            Tags = status.tags
         });
 
         _liteStatusStorage.ReplaceAll(siteStatuses);
