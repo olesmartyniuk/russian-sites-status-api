@@ -26,7 +26,7 @@ namespace RussianSitesStatus.Auth
         {
             try
             {
-                if (!Context.Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKey) || _configuration["ApiKey"] != apiKey)
+                if (!Context.Request.Headers.TryGetValue(ApiKeyHeaderName, out var apiKey) || _configuration["API_KEY"] != apiKey)
                 {
                     return Task.FromResult(AuthenticateResult.Fail("This path is restricted to internal users only."));
                 }
