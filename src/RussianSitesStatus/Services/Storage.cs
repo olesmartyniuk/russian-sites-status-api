@@ -67,12 +67,13 @@ public class Storage<T> where T : Site
         }
     }
     
-    public IEnumerable<T> Search(string url, PaginationFilter filter)
+    public IEnumerable<T> Search(string url)
     {
         var searchRegex = new Regex($@"((http|https)\:\/\/)?(www.)?\.*{Regex.Escape(url)}", RegexOptions.Compiled);
-        var results = _items.Values.Where(x => searchRegex.IsMatch(x.WebsiteUrl)).ToList();
-        return results
-               .Skip(filter.CountToSkip)
-               .Take(filter.PageSize);
+
+        var results = _items.Values
+            .Where(x => searchRegex.IsMatch(x.WebsiteUrl));
+
+        return results;             
     }
 }
