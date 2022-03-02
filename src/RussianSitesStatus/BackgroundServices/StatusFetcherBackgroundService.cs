@@ -62,13 +62,12 @@ public class StatusFetcherBackgroundService : BackgroundService
                     Status = data.status,
                     TestType = data.test_type,
                     Uptime = data.uptime,
-                    WebsiteUrl = data.website_url,
-                    DoNotFind = data.do_not_find,
-                    LastTestedAt = data.last_tested_at,
-                    Processing = data.processing,
+                    WebsiteUrl = data.website_url,                    
+                    LastTestedAt = data.last_tested_at,                    
                     Servers = data.servers.Select(s => new Server
                     {
                         Region = s.region,
+                        RegionCode = s.region_code,
                         Status = GetStatusByRegion(history, s.region_code),
                         StatusCode = GetStatusCodeByRegion(history, s.region_code),
                         LastTestedAt = GetLastTestedAtByRegion(history, s.region_code)
