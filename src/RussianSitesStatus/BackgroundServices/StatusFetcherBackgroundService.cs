@@ -6,7 +6,10 @@ namespace RussianSitesStatus.BackgroundServices;
 
 public class StatusFetcherBackgroundService : BackgroundService
 {
-    private const int WAIT_TO_NEXT_CHECK_SECONDS = 15;
+    private const int WAIT_TO_NEXT_CHECK_SECONDS = 30;
+    private const int REQUESTS_PER_SECOND_LIMIT = 10;
+    private const int ONE_SECOND = 1000;
+
     private readonly StatusCakeService _statusCakeService;
     private readonly Storage<Site> _liteStatusStorage;
     private readonly Storage<SiteDetails> _fullStatusStorage;
@@ -44,32 +47,136 @@ public class StatusFetcherBackgroundService : BackgroundService
 
     private async Task UpdateFullStatuses(IEnumerable<Site> statuses)
     {
-        foreach (var status in statuses)
+        foreach (var batch in statuses.Chunk(REQUESTS_PER_SECOND_LIMIT))
         {
-            var uptimeCheck = await _statusCakeService.GetStatus(status.Id);
-            var data = uptimeCheck.data;
-            var siteStatus = new SiteDetails
+            foreach (var status in batch)
             {
-                Id = data.id,
-                Name = data.name.NormalizeSiteName(),
-                Status = data.status,
-                TestType = data.test_type,
-                Uptime = data.uptime,
-                WebsiteUrl = data.website_url,
-                DoNotFind = data.do_not_find,
-                LastTestedAt = data.last_tested_at,
-                Processing = data.processing,
-                Servers = data.servers.Select(s => new Server
-                {
-                    Description = s.description,
-                    Region = s.region,
-                    Status = s.status
-                }).ToList(),
-                Timeout = data.timeout
-            };
+                var uptimeCheck = await _statusCakeService.GetStatus(status.Id);
+                var history = await GetHistory(status);
 
-            _fullStatusStorage.Replace(siteStatus);
+                var data = uptimeCheck.data;
+                var siteStatus = new SiteDetails
+                {
+                    Id = data.id,
+                    Name = data.name.NormalizeSiteName(),
+                    Status = data.status,
+                    TestType = data.test_type,
+                    Uptime = data.uptime,
+                    WebsiteUrl = data.website_url,                    
+                    LastTestedAt = data.last_tested_at,                    
+                    Servers = data.servers.Select(s => new Server
+                    {
+                        Region = s.region,
+                        RegionCode = s.region_code,
+                        Status = GetStatusByRegion(history, s.region_code),
+                        StatusCode = GetStatusCodeByRegion(history, s.region_code),
+                        LastTestedAt = GetLastTestedAtByRegion(history, s.region_code)
+                    }).ToList(),
+                    Timeout = data.timeout
+                };
+
+                _fullStatusStorage.Replace(siteStatus);                
+            }
+
+            await Task.Delay(ONE_SECOND); // Sleep to avoid 429
         }
+
+        string GetStatusByRegion(Dictionary<string, UptimeCheckHistoryItem> history, string regionCode)
+        {
+            if (!history.ContainsKey(regionCode))
+            {
+                return string.Empty;
+            }
+
+            var statusCode = history[regionCode].status_code;
+
+            if (statusCode >= 200 && statusCode <= 300)
+            {
+                return "up";
+            }
+
+            return "down";
+        }
+
+        int GetStatusCodeByRegion(Dictionary<string, UptimeCheckHistoryItem> history, string regionCode)
+        {
+            if (!history.ContainsKey(regionCode))
+            {
+                return -1;
+            }
+
+            return history[regionCode].status_code;
+        }
+
+        DateTime GetLastTestedAtByRegion(Dictionary<string, UptimeCheckHistoryItem> history, string regionCode)
+        {
+            if (!history.ContainsKey(regionCode))
+            {
+                return default(DateTime);
+            }
+
+            return history[regionCode].created_at;
+        }
+    }
+
+    private async Task<Dictionary<string, UptimeCheckHistoryItem>> GetHistory(Site status)
+    {
+        var result = new Dictionary<string, UptimeCheckHistoryItem>();
+        var history = await _statusCakeService.GetHistory(status.Id);
+
+        foreach (var historyItem in history)
+        {
+            if (!result.ContainsKey(historyItem.location))
+            {
+                result.Add(historyItem.location, historyItem);
+            }
+        }
+
+        return result.Values
+            .Where(value => !string.IsNullOrEmpty(GetRegionByLocation(value.location)))
+            .ToDictionary(value => GetRegionByLocation(value.location));
+    }
+
+    private string GetRegionByLocation(string location)
+    {
+    return location.ToUpper() switch
+        {
+            "RU3" => "novosibirsk",
+           
+            "SG1" => "singapore",
+            "SG2" => "singapore",
+            
+            "SWE1" => "stockholm",
+            "SE3" => "stockholm",
+                       
+            "DEFR-1" => "frankfurt",
+            "DODE6" => "frankfurt",
+
+            "BR1" => "sao-paulo",
+            
+            "JP1" => "tokyo",
+            "JP5" => "tokyo",
+            
+            "PL4" => "warsaw",
+            "PL2" => "warsaw",
+            
+            "HK" => "hong-kong",
+            "HK2" => "hong-kong",
+
+            "MEX" => "mexico-city",
+            "MEX2" => "mexico-city",
+            
+            "UKBOB" => "london",
+            "FREE12SUB1" => "london",
+            
+            "TORO3" => "toronto",
+            "CATOR" => "toronto",
+            
+            "AU4" => "sydney",
+            "AU5" => "sydney",
+
+            _ => string.Empty
+        };
     }
 
     private async Task<IEnumerable<Site>> UpdateLiteStatuses()
@@ -91,6 +198,4 @@ public class StatusFetcherBackgroundService : BackgroundService
 
         return siteStatuses;
     }
-
-
 }

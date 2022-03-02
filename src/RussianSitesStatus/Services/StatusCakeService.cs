@@ -24,7 +24,7 @@ public class StatusCakeService
         int totalCount;
         do
         {
-            var response = await _httpClient.GetAsync(Endpoints.GetAllStatuses(pageNumber, batchSize));
+            var response = await _httpClient.GetAsync(Endpoints.GetAllUptimeChecks(pageNumber, batchSize));
             var payload = await response.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<UptimeChecks>(payload);
             resultSet.AddRange(result.data);
@@ -39,35 +39,51 @@ public class StatusCakeService
 
     public async Task AddUptimeCheckItemAsync(UptimeCheckItem uptimeCheckItem)
     {
-        var response = await _httpClient.PostAsync(Endpoints.AddUptimeChecksItem, uptimeCheckItem.ToFormUrlEncodedContent());
+        var response = await _httpClient.PostAsync(Endpoints.AddUptimeCheck, uptimeCheckItem.ToFormUrlEncodedContent());
 
         response.EnsureSuccessStatusCode();
     }
 
     public async Task DeleteUptimeCheckItemAsync(string id)
     {
-        var response = await _httpClient.DeleteAsync(Endpoints.DeleteUptimeCheckItem(id));
+        var response = await _httpClient.DeleteAsync(Endpoints.DeleteUptimeCheck(id));
      
         response.EnsureSuccessStatusCode();
     }
 
     public async Task<UptimeCheck> GetStatus(string id)
     {
-        var response = await _httpClient.GetAsync(Endpoints.GetStatus(id));
+        var response = await _httpClient.GetAsync(Endpoints.GetUptimeCheck(id));
+        response.EnsureSuccessStatusCode();
+
         var payload = await response.Content.ReadAsStringAsync();
 
         return JsonSerializer.Deserialize<UptimeCheck>(payload);
     }
 
+    public async Task<IEnumerable<UptimeCheckHistoryItem>> GetHistory(string id)
+    {
+        var from = DateTime.UtcNow.AddMinutes(-5);
+        var unixTimestamp = (int)from.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+
+        var response = await _httpClient.GetAsync(Endpoints.GetUptimeCheckHistory(id, unixTimestamp));
+        response.EnsureSuccessStatusCode();
+
+        var payload = await response.Content.ReadAsStringAsync();
+        var history = JsonSerializer.Deserialize<UptimeCheckHistory>(payload);        
+
+        return history.data;
+    }
 
     public static class Endpoints
     {
         private static string Host = "https://api.statuscake.com";
         private static string ApiVersion = "v1";
 
-        public static string AddUptimeChecksItem => $"{Host}/{ApiVersion}/uptime";
-        public static string GetAllStatuses(int pageNumber, int limit) => $"{Host}/{ApiVersion}/uptime?page={pageNumber}&limit={limit}";
-        public static string GetStatus(string id) => $"{Host}/{ApiVersion}/uptime/{id}";
-        public static string DeleteUptimeCheckItem(string id) => $"{Host}/{ApiVersion}/uptime/{id}";
+        public static string AddUptimeCheck => $"{Host}/{ApiVersion}/uptime";
+        public static string GetAllUptimeChecks(int pageNumber, int limit) => $"{Host}/{ApiVersion}/uptime?page={pageNumber}&limit={limit}";
+        public static string GetUptimeCheck(string id) => $"{Host}/{ApiVersion}/uptime/{id}";
+        public static string DeleteUptimeCheck(string id) => $"{Host}/{ApiVersion}/uptime/{id}";
+        public static string GetUptimeCheckHistory(string id, int fromUnixTime) => $"{Host}/{ApiVersion}/uptime/{id}/history?start={fromUnixTime}";
     }
 }

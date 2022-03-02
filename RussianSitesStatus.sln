@@ -5,7 +5,12 @@ VisualStudioVersion = 17.2.32210.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RussianSitesStatus", "src\RussianSitesStatus\RussianSitesStatus.csproj", "{C929E9E6-8E33-408F-BF90-38A182B48CC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RussianSitesStatus.UnitTests", "src\RussianSitesStatus.UnitTests\RussianSitesStatus.UnitTests.csproj", "{96694124-181B-4C3B-A398-6A4602EB81F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RussianSitesStatus.UnitTests", "src\RussianSitesStatus.UnitTests\RussianSitesStatus.UnitTests.csproj", "{96694124-181B-4C3B-A398-6A4602EB81F7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6CD3E5D6-63B3-4F6A-849E-C9A258581D58}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
