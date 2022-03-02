@@ -15,6 +15,7 @@ public class SyncSitesService
     private readonly IEnumerable<ISiteSource> _siteSources;
     private readonly StatusCakeService _statusCakeService;
     private readonly Storage<Site> _liteStatusStorage;
+    private readonly UpCheckService _upCheckService;
     private readonly ILogger<SyncSitesService> _logger;
     private static readonly List<string> _monitoringRegions = new()
     {
@@ -35,7 +36,8 @@ public class SyncSitesService
         IEnumerable<ISiteSource> siteSources,
         StatusCakeService statusCakeService,
         Storage<Site> liteStatusStorage,
-        ILogger<SyncSitesService> logger)
+        ILogger<SyncSitesService> logger,
+        UpCheckService upCheckService)
     {
         var apiKey = configuration["STATUS_CAKE_API_KEY"];
 
@@ -46,6 +48,7 @@ public class SyncSitesService
         _statusCakeService = statusCakeService;
         _liteStatusStorage = liteStatusStorage;
         _logger = logger;
+        _upCheckService = upCheckService;
     }
 
     public async Task SyncAsync()
@@ -77,13 +80,8 @@ public class SyncSitesService
     private async Task AddNewSites(IEnumerable<string> allSitesFromSources)
     {
         var notExistingSites = GetUptimeCheckItemToBeAddedFromLocalStorage(allSitesFromSources);
-        var action = async (string siteUrl) =>
-        {
-            var newUptimeCheckItem = BuildNewUptimeCheckItem(siteUrl);
-            await _statusCakeService.AddUptimeCheckItemAsync(newUptimeCheckItem);
-        };
 
-        await ProccesBatchAsync(notExistingSites, action);
+        await ProccesBatchAsync(notExistingSites, _upCheckService.AddUptimeCheckAsync);
     }
 
     private async Task ProccesBatchAsync(IEnumerable<string> notExistingSites, Func<string, Task> action)
@@ -157,6 +155,7 @@ public class SyncSitesService
     {
         var sites = _liteStatusStorage.GetAll();
         var oldSites = sites
+            .Where(s => !s.Tags.Any(t => t == Tag.CustomSite))
             .Select(s => s.WebsiteUrl.NormilizeStringUrl())
             .Except(allSitesFromSources.Select(s => s.NormilizeStringUrl()))
             .Take(size);
