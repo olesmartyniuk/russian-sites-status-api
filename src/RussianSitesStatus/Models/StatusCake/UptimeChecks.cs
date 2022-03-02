@@ -9,7 +9,7 @@ public class UptimeChecksItem
     public int check_rate { get; set; }
     public List<object> contact_groups { get; set; }
     public string status { get; set; }
-    public List<object> tags { get; set; }
+    public List<string> tags { get; set; }
     public double uptime { get; set; }
 }
 

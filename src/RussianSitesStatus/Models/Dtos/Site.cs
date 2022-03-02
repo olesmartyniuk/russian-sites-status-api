@@ -8,6 +8,8 @@ public class Site
     public string WebsiteUrl { get; set; }
     public string Status { get; set; }
     public double Uptime { get; set; }
+    public List<string> Tags { get; set; }
+
 
     internal object Where()
     {

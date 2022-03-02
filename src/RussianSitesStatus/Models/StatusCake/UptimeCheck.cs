@@ -26,7 +26,7 @@ public class UptimeCheckItem
     public List<UptimeCheckServer> servers { get; set; }
     public bool processing { get; set; }
     public string status { get; set; }
-    public List<object> tags { get; set; }
+    public List<string> tags { get; set; }
     public int timeout { get; set; }
     public int trigger_rate { get; set; }
     public double uptime { get; set; }

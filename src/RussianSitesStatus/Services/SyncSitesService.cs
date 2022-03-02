@@ -14,13 +14,15 @@ public class SyncSitesService
     private readonly IEnumerable<ISiteSource> _siteSources;
     private readonly StatusCakeService _statusCakeService;
     private readonly Storage<Site> _liteStatusStorage;
+    private readonly UpCheckService _upCheckService;
     private readonly ILogger<SyncSitesService> _logger;
 
     public SyncSitesService(IConfiguration configuration,
         IEnumerable<ISiteSource> siteSources,
         StatusCakeService statusCakeService,
         Storage<Site> liteStatusStorage,
-        ILogger<SyncSitesService> logger)
+        ILogger<SyncSitesService> logger,
+        UpCheckService upCheckService)
     {
         var apiKey = configuration["STATUS_CAKE_API_KEY"];
 
@@ -30,6 +32,7 @@ public class SyncSitesService
         _statusCakeService = statusCakeService;
         _liteStatusStorage = liteStatusStorage;
         _logger = logger;
+        _upCheckService = upCheckService;
     }
 
     public async Task SyncAsync()
@@ -61,13 +64,8 @@ public class SyncSitesService
     private async Task AddNewSites(IEnumerable<string> allSitesFromSources)
     {
         var notExistingSites = GetUptimeCheckItemToBeAddedFromLocalStorage(allSitesFromSources);
-        var action = async (string siteUrl) =>
-        {
-            var newUptimeCheckItem = BuildNewUptimeCheckItem(siteUrl);
-            await _statusCakeService.AddUptimeCheckItemAsync(newUptimeCheckItem);
-        };
 
-        await ProccesBatchAsync(notExistingSites, action);
+        await ProccesBatchAsync(notExistingSites, _upCheckService.AddUptimeCheckAsync);
     }
 
     private async Task ProccesBatchAsync(IEnumerable<string> notExistingSites, Func<string, Task> action)
@@ -86,18 +84,7 @@ public class SyncSitesService
         await Task.WhenAll(taskList);
     }
 
-    private static UptimeCheckItem BuildNewUptimeCheckItem(string url)
-    {
-        var newUptimeCheckItem = new UptimeCheckItem
-        {
-            website_url = url,
-            name = url.NormalizeSiteName(),
-            check_rate = Rate.Defaul,
-            test_type = TestType.HTTP,
-            regions = new List<string> { "singapore", "novosibirsk" } //TODOVK: Provide list of regions, exists 100500 diff regions
-        };
-        return newUptimeCheckItem;
-    }
+
 
     private async Task<IEnumerable<string>> GetSitesFromAllSources()
     {
@@ -135,7 +122,10 @@ public class SyncSitesService
     private IEnumerable<string> GetUptimeCheckItemIdsToBeDeleted(IEnumerable<string> allSitesFromSources, int size)
     {
         var sites = _liteStatusStorage.GetAll();
-        var oldSites = sites.Select(s => s.WebsiteUrl.NormilizeStringUrl()).Except(allSitesFromSources.Select(s => s.NormilizeStringUrl())).Take(size);
+        var oldSites = sites.Where(s => !s.Tags.Any(t => t == Tag.CustomSite))
+                            .Select(s => s.WebsiteUrl.NormilizeStringUrl())
+                            .Except(allSitesFromSources.Select(s => s.NormilizeStringUrl())).Take(size);
+
         return sites.Where(t => oldSites.Contains(t.WebsiteUrl.NormilizeStringUrl())).Select(t => t.Id);
     }
 }
