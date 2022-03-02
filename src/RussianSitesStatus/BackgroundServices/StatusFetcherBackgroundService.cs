@@ -140,24 +140,40 @@ public class StatusFetcherBackgroundService : BackgroundService
 
     private string GetRegionByLocation(string location)
     {
-        // TODO: extend this map
-        return location switch
+    return location.ToUpper() switch
         {
             "RU3" => "novosibirsk",
-            "IND1" => "",
+           
             "SG1" => "singapore",
             "SG2" => "singapore",
+            
             "SWE1" => "stockholm",
-            "UG9" => "",
+            "SE3" => "stockholm",
+                       
             "DEFR-1" => "frankfurt",
+            "DODE6" => "frankfurt",
+
             "BR1" => "sao-paulo",
+            
             "JP1" => "tokyo",
-            "ZA3" => "",
+            "JP5" => "tokyo",
+            
+            "PL4" => "warsaw",
             "PL2" => "warsaw",
+            
             "HK" => "hong-kong",
+            "HK2" => "hong-kong",
+
             "MEX" => "mexico-city",
+            "MEX2" => "mexico-city",
+            
             "UKBOB" => "london",
+            "FREE12SUB1" => "london",
+            
             "TORO3" => "toronto",
+            "CATOR" => "toronto",
+            
+            "AU4" => "sydney",
             "AU5" => "sydney",
 
             _ => string.Empty
