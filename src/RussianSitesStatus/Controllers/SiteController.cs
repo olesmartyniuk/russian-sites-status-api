@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RussianSitesStatus.Auth;
 using RussianSitesStatus.Models;
+using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Services;
 
 namespace RussianSitesStatus.Controllers;
@@ -9,11 +12,13 @@ public class SiteController : ControllerBase
 {
     private readonly Storage<Site> _liteStatusStorage;
     private readonly Storage<SiteDetails> _fullStatusStorage;
+    private readonly UpCheckService _upCheckService;
 
-    public SiteController(Storage<Site> liteStatusStorage, Storage<SiteDetails> fullStatusStorage)
+    public SiteController(Storage<Site> liteStatusStorage, Storage<SiteDetails> fullStatusStorage, UpCheckService upCheckService)
     {
         _liteStatusStorage = liteStatusStorage;
         _fullStatusStorage = fullStatusStorage;
+        _upCheckService = upCheckService;
     }
 
     /// <summary>
@@ -89,5 +94,27 @@ public class SiteController : ControllerBase
 
         var result = _fullStatusStorage.Search(text);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Add site for monitoring
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///    POST https://russian-sites-status-api.herokuapp.com/api/sites/ya.ru
+    ///
+    /// </remarks>    
+    /// <param name="siteUrl">Site URL to monitor</param>
+    /// <response code="201">Created</response>
+    /// <response code="401">Unauthorized</response> 
+    /// <response code="500">Internal server error</response> 
+    [HttpPost("api/sites/{siteUrl}")]
+    [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
+    public async Task<ActionResult> AddNewSiteAsync([FromRoute]string siteUrl)
+    {
+        await _upCheckService.AddUptimeCheckAsync(siteUrl, new List<string> { Tag.CustomSite });
+
+        return Created("", "");
     }
 }
