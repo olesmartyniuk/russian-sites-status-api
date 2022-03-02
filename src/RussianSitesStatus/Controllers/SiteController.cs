@@ -80,7 +80,7 @@ public class SiteController : ControllerBase
     /// <response code="400">Bad request</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/search")]
-    public ActionResult<IEnumerable<Site>> Search([FromQuery] string text)
+    public ActionResult<IEnumerable<SiteDetails>> Search([FromQuery] string text)
     {
         if (string.IsNullOrEmpty(text) | text.Length < 3)
         {
