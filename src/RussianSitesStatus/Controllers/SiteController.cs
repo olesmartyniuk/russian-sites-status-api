@@ -16,6 +16,18 @@ public class SiteController : ControllerBase
         _fullStatusStorage = fullStatusStorage;
     }
 
+    /// <summary>
+    /// Returns all sites
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///    GET https://russian-sites-status-api.herokuapp.com/api/sites
+    ///
+    /// </remarks>    
+    /// <returns>List of sites</returns>
+    /// <response code="200">List of sites</response>
+    /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites")]
     public ActionResult<List<Site>> GetAllSites()
     {
@@ -23,9 +35,23 @@ public class SiteController : ControllerBase
             .GetAll()
             .ToList();
 
-        return Ok(result);        
+        return Ok(result);
     }
 
+    /// <summary>
+    /// Returns site details by id
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///    GET https://russian-sites-status-api.herokuapp.com/api/sites/2876347
+    ///
+    /// </remarks>    
+    /// <param name="id">Site id, integer number</param>
+    /// <returns>Site details</returns>    
+    /// <response code="200">Site details</response>
+    /// <response code="404">Site not found</response> 
+    /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/{id}")]
     public ActionResult<SiteDetails> GetSite(string id)
     {
@@ -39,7 +65,20 @@ public class SiteController : ControllerBase
         return Ok(result);
     }
 
-
+    /// <summary>
+    /// Search for site by url
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///    GET https://russian-sites-status-api.herokuapp.com/api/sites/search?text=ya.ru
+    ///
+    /// </remarks>    
+    /// <param name="text">Text, minimum 3 symbols</param>
+    /// <returns>List of sites</returns>    
+    /// <response code="200">List of sites</response>
+    /// <response code="400">Bad request</response> 
+    /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/search")]
     public ActionResult<IEnumerable<Site>> Search([FromQuery] string text)
     {
