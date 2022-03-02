@@ -68,8 +68,9 @@ app.UseSwagger();
 
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Zbyrach API");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mordor sites status API");
     c.RoutePrefix = string.Empty;
+    c.DocumentTitle = "Mordor sites status API";    
 });
 app.UseHttpsRedirection();
 app.UseAuthorization();
