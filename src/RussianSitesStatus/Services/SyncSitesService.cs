@@ -1,6 +1,7 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Models.Constants;
+using RussianSitesStatus.Models.Constants.StatusCake;
 using RussianSitesStatus.Services.Contracts;
 using RussianSitesStatus.Services.StatusCake;
 using System.Collections.Concurrent;

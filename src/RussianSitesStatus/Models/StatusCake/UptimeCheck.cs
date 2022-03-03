@@ -1,4 +1,4 @@
-namespace RussianSitesStatus.Models;
+namespace RussianSitesStatus.Models.StatusCake;
 
 public class UptimeCheckServer
 {
