@@ -7,9 +7,10 @@ namespace RussianSitesStatus.Services
     public class FetchDataService : IFetchDataService
     {
         private DatabaseStorage _databaseStorage;
-        public FetchDataService(DatabaseStorage databaseStorage)
+        public FetchDataService(IServiceScopeFactory serviceScopeFactory )
         {
-            _databaseStorage = databaseStorage;
+            using var serviceScope = serviceScopeFactory.CreateScope();
+            _databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
         }
 
         public async Task<IEnumerable<SiteDetailsVM>> GetAllSitesDetailsAsync()
