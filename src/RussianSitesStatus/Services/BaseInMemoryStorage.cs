@@ -1,14 +1,12 @@
-using System.Text.RegularExpressions;
-using RussianSitesStatus.Extensions;
-using RussianSitesStatus.Models;
+using RussianSitesStatus.Models.ViewModels;
 
 namespace RussianSitesStatus.Services;
-public class Storage<T> where T : Site
+public class BaseInMemoryStorage<T> where T : BaseModelVM
 {
     private readonly ReaderWriterLockSlim _lock = new();
-    private readonly Dictionary<string, T> _items = new();
+    private readonly Dictionary<long, T> _items = new();
 
-    public T Get(string id)
+    public T Get(long id)
     {
         _lock.EnterReadLock();
         try
@@ -66,17 +64,5 @@ public class Storage<T> where T : Site
         {
             _lock.ExitWriteLock();
         }
-    }
-    
-    public IEnumerable<T> Search(string url)
-    {
-        url = url.NormalizeSiteName();
-
-        var searchRegex = new Regex($@"((http|https)\:\/\/)?(www.)?\.*{Regex.Escape(url)}", RegexOptions.Compiled);
-
-        var results = _items.Values
-            .Where(x => searchRegex.IsMatch(x.WebsiteUrl));
-
-        return results;             
     }
 }

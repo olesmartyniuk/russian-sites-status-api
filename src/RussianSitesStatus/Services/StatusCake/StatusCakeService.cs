@@ -1,9 +1,10 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
+using RussianSitesStatus.Models.StatusCake;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace RussianSitesStatus.Services;
+namespace RussianSitesStatus.Services.StatusCake;
 public class StatusCakeService
 {
     private readonly HttpClient _httpClient;

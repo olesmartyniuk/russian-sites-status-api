@@ -7,16 +7,21 @@ using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication;
 using RussianSitesStatus.Auth;
+using RussianSitesStatus.Database;
+using Microsoft.EntityFrameworkCore;
+using RussianSitesStatus.Services.StatusCake;
+using RussianSitesStatus.Database.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-AddService(builder.Services);
+AddServices(builder);
 AddControllers(builder);
-AddSwagger(builder.Services);
+AddSwagger(builder);
 AddAuthentication(builder);
-AddCors(builder.Services);
+AddCors(builder);
 
 builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
+builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
 
 builder.WebHost.UseKestrel((context, options) =>
 {
@@ -41,26 +46,75 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+CreateDbIfNotExist(app);
+
 app.Run();
 
 
-static void AddService(IServiceCollection services)
+static void CreateDbIfNotExist(WebApplication app)
 {
-    services.AddSingleton<StatusCakeService>();
-    services.AddSingleton<Storage<Site>>();
-    services.AddSingleton<Storage<SiteDetails>>();
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
 
-    services.AddSingleton<UpCheckService>();
-    services.AddSingleton<SyncSitesService>();
-    services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
+    try
+    {
+        var context = services.GetRequiredService<ApplicationContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
 
-    services.AddHostedService<StatusFetcherBackgroundService>();
-    services.AddHostedService<SyncSitesBackgroundService>();
+        var migrations = context.Database.GetPendingMigrations().ToList();
+        if (migrations.Any())
+        {
+            logger.LogInformation("Service is going to run migrations: {migrations}.", string.Join(", ", migrations));
+        }
+        else
+        {
+            logger.LogInformation("There are no pending migrations");
+        }
+        context.Database.Migrate();
+        logger.LogInformation("The database has been successfully migrated.");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred creating the DB.");
+    }
 }
 
-static void AddCors(IServiceCollection services)
+
+static void AddServices(WebApplicationBuilder builder)
 {
-    services.AddCors(options =>
+    var services = builder.Services;
+
+    services.AddDbContext<ApplicationContext>(options =>
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString());
+    });
+
+    services.AddSingleton<StatusCakeService>();
+    services.AddSingleton<InMemoryStorage<SiteVM>>();
+    services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
+    services.AddSingleton<BaseInMemoryStorage<RegionVM>>();
+
+    services.AddSingleton<StatusCakeUpCheckService>();
+    services.AddSingleton<ISyncSitesService, SyncStatusCakeSitesService>();
+
+    services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
+
+    services.AddScoped<DatabaseStorage>();
+
+    services.AddSingleton<IFetchDataService, FetchDataService>();
+    services.AddSingleton<MonitorSitesStatusService>();
+    services.AddSingleton<ICheckSiteService, CheckSiteService>();
+
+    services.AddHostedService<MemoryDataFetcher>();
+    services.AddHostedService<SyncSitesWorker>();
+    services.AddHostedService<MonitorStatusWorker>();
+}
+
+static void AddCors(WebApplicationBuilder builder)
+{
+    builder.Services.AddCors(options =>
     {
         options.AddPolicy("CorsPolicy",
             builder => builder
@@ -70,9 +124,9 @@ static void AddCors(IServiceCollection services)
     });
 }
 
-static void AddSwagger(IServiceCollection services)
+static void AddSwagger(WebApplicationBuilder builder)
 {
-    services.AddSwaggerGen(c =>
+    builder.Services.AddSwaggerGen(c =>
     {
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
