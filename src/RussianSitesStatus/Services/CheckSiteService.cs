@@ -23,7 +23,7 @@ public class CheckSiteService : ICheckSiteService
 
     // make api call
     //save Ceck: status code, SpentTime
-    public async Task CheckAsync(SiteVM site, Region region)
+    public async Task CheckAsync(SiteVM site, RegionVM region)
     {
         try
         {
@@ -45,7 +45,7 @@ public class CheckSiteService : ICheckSiteService
         }
     }
 
-    public async Task SaveCheckAsync(int statusCode, SiteVM site, Region region, int spentTime)
+    public async Task SaveCheckAsync(int statusCode, SiteVM site, RegionVM region, int spentTime)
     {
         var check = new Check
         {
