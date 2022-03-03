@@ -13,12 +13,12 @@ public class MonitorSitesService
     private readonly BaseStorage<Region> _inMemoryRegionStorage;
     private readonly ICheckSiteService _checkSiteService;
 
-    private readonly ILogger<SyncSitesService> _logger;
+    private readonly ILogger<MonitorSitesService> _logger;
 
     public MonitorSitesService(
         IConfiguration configuration,
         BaseStorage<Site> liteStatusStorage,
-        ILogger<SyncSitesService> logger,
+        ILogger<MonitorSitesService> logger,
         StatusCakeUpCheckService upCheckService,
         BaseStorage<Region> inMemoryRegionStorage,
         ICheckSiteService checkSiteService)
