@@ -73,6 +73,13 @@ public class DatabaseStorage
         return newSite;
     }
 
+    public async Task AddSites(IEnumerable<Site> sites)
+    {
+        _db.Sites.AddRange(sites);
+
+        await _db.SaveChangesAsync();
+    }
+
     public async Task<IEnumerable<Check>> GetLastCheckBySiteId(long siteId)
     {
         return await _db.Checks

@@ -8,29 +8,31 @@ public class SyncSitesWorker : BackgroundService
 {
     private readonly SyncSitesConfiguration _syncSitesConfiguration;
 
-    private readonly ISyncSitesService _syncSitesService;
+    private readonly IServiceScopeFactory _serviceFactory;
     private readonly ILogger<SyncSitesWorker> _logger;
     public SyncSitesWorker(
         ILogger<SyncSitesWorker> logger,
-        ISyncSitesService syncSitesService,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        IServiceScopeFactory serviceFactory)
     {
-        _logger = logger;
-        _syncSitesService = syncSitesService;
+        _logger = logger;        
         _syncSitesConfiguration = serviceProvider
             .GetRequiredService<IOptions<SyncSitesConfiguration>>().Value;
+        _serviceFactory = serviceFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        using var serviceScope = _serviceFactory.CreateScope();        
+        var syncSitesService = serviceScope.ServiceProvider.GetRequiredService<ISyncSitesService>();
+
         await Task.Delay(TimeSpan.FromSeconds(_syncSitesConfiguration.WaitBeforeFirstIterationSeconds), stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
-            {
-                //TODOPavlo:, TODOKhrystyna: Create a new implemantaion of ISyncSitesService, register it in DI container
-                await _syncSitesService.SyncAsync();
+            {                
+                await syncSitesService.SyncAsync();
             }
             catch (Exception e)
             {
