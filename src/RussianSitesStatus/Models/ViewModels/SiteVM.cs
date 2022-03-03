@@ -2,7 +2,7 @@ namespace RussianSitesStatus.Models;
 
 public class SiteVM
 {
-    public string Id { get; set; }
+    public string Id { get; set; } //TODO: Why string?
     public string Name { get; set; }
     public string TestType { get; set; }
     public string WebsiteUrl { get; set; }
