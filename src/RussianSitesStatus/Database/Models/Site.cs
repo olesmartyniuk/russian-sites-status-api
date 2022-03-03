@@ -35,8 +35,5 @@ public class SiteConfiguration : IEntityTypeConfiguration<Site>
         builder
             .HasIndex(p => p.Url)
             .IsUnique();
-        builder
-            .HasIndex(p => p.Name)
-            .IsUnique();
     }
 }
