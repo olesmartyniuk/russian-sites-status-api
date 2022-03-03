@@ -14,7 +14,7 @@ public class SyncStatusCakeSitesService : ISyncSitesService
     private readonly HttpClient _httpClient;
     private readonly IEnumerable<ISiteSource> _siteSources;
     private readonly StatusCakeService _statusCakeService;
-    private readonly Storage<SiteVM> _liteStatusStorage;
+    private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
     private readonly StatusCakeUpCheckService _upCheckService;
     private readonly ILogger<SyncStatusCakeSitesService> _logger;
     private static readonly List<string> _monitoringRegions = new()
@@ -35,7 +35,7 @@ public class SyncStatusCakeSitesService : ISyncSitesService
     public SyncStatusCakeSitesService(IConfiguration configuration,
         IEnumerable<ISiteSource> siteSources,
         StatusCakeService statusCakeService,
-        Storage<SiteVM> liteStatusStorage,
+        InMemoryStorage<SiteVM> liteStatusStorage,
         ILogger<SyncStatusCakeSitesService> logger,
         StatusCakeUpCheckService upCheckService)
     {

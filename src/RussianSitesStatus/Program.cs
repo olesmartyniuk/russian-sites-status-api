@@ -90,8 +90,8 @@ static void AddServices(WebApplicationBuilder builder)
     });
 
     services.AddSingleton<StatusCakeService>();
-    services.AddSingleton<Storage<SiteVM>>();
-    services.AddSingleton<Storage<SiteDetailsVM>>();
+    services.AddSingleton<InMemoryStorage<SiteVM>>();
+    services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
 
     services.AddSingleton<StatusCakeUpCheckService>();
     services.AddSingleton<ISyncSitesService, SyncStatusCakeSitesService>();
@@ -102,8 +102,8 @@ static void AddServices(WebApplicationBuilder builder)
 
     services.AddSingleton<IFetchDataService, StatusCakeFetchDataService>();
 
-    services.AddHostedService<StatusFetcherBackgroundService>();
-    services.AddHostedService<SyncSitesBackgroundService>();
+    services.AddHostedService<MemoryDataFetcher>();
+    services.AddHostedService<SyncSitesWorker>();
 }
 
 static void AddCors(WebApplicationBuilder builder)
