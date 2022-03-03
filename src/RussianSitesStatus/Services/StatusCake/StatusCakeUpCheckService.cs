@@ -1,14 +1,16 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Models.Constants;
+using RussianSitesStatus.Models.Constants.StatusCake;
+using RussianSitesStatus.Models.StatusCake;
 
-namespace RussianSitesStatus.Services;
-public class UpCheckService
+namespace RussianSitesStatus.Services.StatusCake;
+public class StatusCakeUpCheckService
 {
     public StatusCakeService _statusCakeService { get; set; }
-    public Storage<SiteDto> _liteStatusStorage { get; set; }
+    public Storage<SiteVM> _liteStatusStorage { get; set; }
 
-    public UpCheckService(Storage<SiteDto> liteStatusStorage, StatusCakeService statusCakeService)
+    public StatusCakeUpCheckService(Storage<SiteVM> liteStatusStorage, StatusCakeService statusCakeService)
     {
         _statusCakeService = statusCakeService;
         _liteStatusStorage = liteStatusStorage;
