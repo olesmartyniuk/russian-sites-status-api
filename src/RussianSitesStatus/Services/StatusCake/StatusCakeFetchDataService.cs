@@ -4,14 +4,14 @@ using RussianSitesStatus.Models.StatusCake;
 using RussianSitesStatus.Services.Contracts;
 
 namespace RussianSitesStatus.Services.StatusCake;
-public class StatusCakeDataService : IDataService
+public class StatusCakeFetchDataService : IFetchDataService
 {
     private const int REQUESTS_PER_SECOND_LIMIT = 10;
     private const int ONE_SECOND = 1000;
 
     private readonly StatusCakeService _statusCakeService;
 
-    public StatusCakeDataService(StatusCakeService statusCakeService)
+    public StatusCakeFetchDataService(StatusCakeService statusCakeService)
     {
         _statusCakeService = statusCakeService;
     }
