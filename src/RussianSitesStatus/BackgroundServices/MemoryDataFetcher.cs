@@ -11,14 +11,14 @@ public class MemoryDataFetcher : BackgroundService
 
     private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
     private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
-    private readonly BaseInMemoryStorage<Region> _regionStorage;
+    private readonly BaseInMemoryStorage<RegionVM> _regionStorage;
     private readonly ILogger<MemoryDataFetcher> _logger;
     private readonly IFetchDataService _fetchDataService;
 
     public MemoryDataFetcher(
         InMemoryStorage<SiteVM> liteStatusStorage,
         InMemoryStorage<SiteDetailsVM> fullStatusStorage,
-        BaseInMemoryStorage<Region> regionStorage,
+        BaseInMemoryStorage<RegionVM> regionStorage,
         ILogger<MemoryDataFetcher> logger,
         IFetchDataService dataService
        )
@@ -51,7 +51,11 @@ public class MemoryDataFetcher : BackgroundService
     {
         //TODOPavlo: Create a new implemantaion of IFetchDataService, register it in DI container
         var sites = await _fetchDataService.GetAllSitesDetailsAsync();
-        _liteStatusStorage.ReplaceAll(sites.Select(vm => vm as SiteVM));
         _fullStatusStorage.ReplaceAll(sites);
+
+        _liteStatusStorage.ReplaceAll(sites.Select(vm => vm as SiteVM));
+
+        var regions = await _fetchDataService.GetAllRegionsAsync();
+        _regionStorage.ReplaceAll(regions);
     }
 }
