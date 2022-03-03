@@ -7,9 +7,9 @@ namespace RussianSitesStatus.Services.StatusCake;
 public class StatusCakeUpCheckService
 {
     public StatusCakeService _statusCakeService { get; set; }
-    public Storage<SiteVM> _liteStatusStorage { get; set; }
+    public InMemoryStorage<SiteVM> _liteStatusStorage { get; set; }
 
-    public StatusCakeUpCheckService(Storage<SiteVM> liteStatusStorage, StatusCakeService statusCakeService)
+    public StatusCakeUpCheckService(InMemoryStorage<SiteVM> liteStatusStorage, StatusCakeService statusCakeService)
     {
         _statusCakeService = statusCakeService;
         _liteStatusStorage = liteStatusStorage;

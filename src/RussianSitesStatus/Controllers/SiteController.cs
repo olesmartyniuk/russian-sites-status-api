@@ -13,11 +13,11 @@ namespace RussianSitesStatus.Controllers;
 [ApiController]
 public class SiteController : ControllerBase
 {
-    private readonly Storage<SiteVM> _liteStatusStorage;
-    private readonly Storage<SiteDetailsVM> _fullStatusStorage;
+    private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
+    private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
     private readonly DatabaseStorage _databaseStorage;
 
-    public SiteController(Storage<SiteVM> liteStatusStorage, Storage<SiteDetailsVM> fullStatusStorage, DatabaseStorage databaseStorage)
+    public SiteController(InMemoryStorage<SiteVM> liteStatusStorage, InMemoryStorage<SiteDetailsVM> fullStatusStorage, DatabaseStorage databaseStorage)
     {
         _liteStatusStorage = liteStatusStorage;
         _fullStatusStorage = fullStatusStorage;
