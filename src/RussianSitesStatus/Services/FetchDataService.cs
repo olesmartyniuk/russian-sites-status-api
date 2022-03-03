@@ -7,17 +7,16 @@ namespace RussianSitesStatus.Services
     public class FetchDataService : IFetchDataService
     {
         private DatabaseStorage _databaseStorage;
-        private IServiceScopeFactory _serviceScopeFactory;
-        public FetchDataService(IServiceScopeFactory serviceScopeFactory )
+        public FetchDataService(IServiceScopeFactory serviceScopeFactory)
         {
-            _serviceScopeFactory = serviceScopeFactory;
+            using (var serviceScope = serviceScopeFactory.CreateScope())
+            {
+                _databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+            }
         }
 
         public async Task<IEnumerable<SiteDetailsVM>> GetAllSitesDetailsAsync()
         {
-            using var serviceScope = _serviceScopeFactory.CreateScope();
-            _databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
-
             var siteDetailsVMList = new List<SiteDetailsVM>();
             var sitesDB = await _databaseStorage.GetAllSites();
 
@@ -29,11 +28,9 @@ namespace RussianSitesStatus.Services
             return siteDetailsVMList;
         }
 
-
         private SiteDetailsVM GetSiteDetailsVM(Site siteDbItem)
         {
             var lastItem = siteDbItem.Checks.OrderBy(check => check.CheckedAt).LastOrDefault();
-
 
             var latsChecks = siteDbItem.Checks.Where(check => check.CheckedAt > DateTime.UtcNow.AddDays(-1)).ToList();
             var countChecks = latsChecks.Count();
@@ -70,6 +67,12 @@ namespace RussianSitesStatus.Services
                 });
 
             return servers;
+        }
+
+        public async Task<IEnumerable<RegionVM>> GetAllRegionsAsync()
+        {
+            var regions = await _databaseStorage.GetAllRegions();
+            return regions.Select(region => new RegionVM { Id = region.Id, Name = region.Name, ProxyUrl = region.ProxyUrl }); //TODOVK: use automapper
         }
     }
 }
