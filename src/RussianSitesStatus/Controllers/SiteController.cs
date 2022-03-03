@@ -13,11 +13,11 @@ namespace RussianSitesStatus.Controllers;
 [ApiController]
 public class SiteController : ControllerBase
 {
-    private readonly Storage<SiteDto> _liteStatusStorage;
-    private readonly Storage<SiteDetailsDto> _fullStatusStorage;
+    private readonly Storage<SiteVM> _liteStatusStorage;
+    private readonly Storage<SiteDetailsVM> _fullStatusStorage;
     private readonly DatabaseStorage _databaseStorage;
 
-    public SiteController(Storage<SiteDto> liteStatusStorage, Storage<SiteDetailsDto> fullStatusStorage, DatabaseStorage databaseStorage)
+    public SiteController(Storage<SiteVM> liteStatusStorage, Storage<SiteDetailsVM> fullStatusStorage, DatabaseStorage databaseStorage)
     {
         _liteStatusStorage = liteStatusStorage;
         _fullStatusStorage = fullStatusStorage;
@@ -37,7 +37,7 @@ public class SiteController : ControllerBase
     /// <response code="200">List of sites</response>
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites")]
-    public ActionResult<List<SiteDto>> GetAll()
+    public ActionResult<List<SiteVM>> GetAll()
     {
         var result = _liteStatusStorage
             .GetAll()
@@ -61,7 +61,7 @@ public class SiteController : ControllerBase
     /// <response code="404">Site not found</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/{id}")]
-    public ActionResult<SiteDetailsDto> Get(string id)
+    public ActionResult<SiteDetailsVM> Get(string id)
     {
         var result = _fullStatusStorage.Get(id);
 
@@ -88,7 +88,7 @@ public class SiteController : ControllerBase
     /// <response code="400">Bad request</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/search")]
-    public ActionResult<IEnumerable<SiteDetailsDto>> Search([FromQuery] string text)
+    public ActionResult<IEnumerable<SiteDetailsVM>> Search([FromQuery] string text)
     {
         if (string.IsNullOrEmpty(text) | text.Length < 3)
         {

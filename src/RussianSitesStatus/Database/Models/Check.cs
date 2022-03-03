@@ -11,15 +11,15 @@ public class Check : Entity
     public int StatusCode { get; set; }
     public int SpentTime { get; set; }
     public DateTime CheckedAt { get; set; }
-    public Region Region { get; set; }
+    public Proxy Region { get; set; }
 }
 
-public enum Region
-{
-    Ukraine = 1,
-    Russia = 2,
-    Europe = 3
-}
+//public enum Region
+//{
+//    Ukraine = 1,
+//    Russia = 2,
+//    Europe = 3
+//}
 public enum CheckStatus
 {
     Available = 1,

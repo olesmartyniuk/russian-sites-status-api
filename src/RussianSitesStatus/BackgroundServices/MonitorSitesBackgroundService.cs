@@ -4,20 +4,21 @@ using RussianSitesStatus.Services;
 
 namespace RussianSitesStatus.BackgroundServices;
 
-public class SyncSitesBackgroundService : BackgroundService
+public class MonitorSitesBackgroundService : BackgroundService
 {
-    private readonly SyncSitesConfiguration _syncSitesConfiguration;
+    private readonly MonitorSitesConfiguration _syncSitesConfiguration;
 
-    private readonly SyncSitesService _syncSitesService;
-    private readonly ILogger<SyncSitesBackgroundService> _logger;
-    public SyncSitesBackgroundService(ILogger<SyncSitesBackgroundService> logger,
-        SyncSitesService syncSitesService,
+    private readonly MonitorSitesService _monitorSitesService;
+    private readonly ILogger<MonitorSitesBackgroundService> _logger;
+    public MonitorSitesBackgroundService(
+        ILogger<MonitorSitesBackgroundService> logger,
+        MonitorSitesService syncSitesService,
         IServiceProvider serviceProvider)
     {
         _logger = logger;
-        _syncSitesService = syncSitesService;
+        _monitorSitesService = syncSitesService;
         _syncSitesConfiguration = serviceProvider
-            .GetRequiredService<IOptions<SyncSitesConfiguration>>().Value;
+            .GetRequiredService<IOptions<MonitorSitesConfiguration>>().Value;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -28,7 +29,7 @@ public class SyncSitesBackgroundService : BackgroundService
         {
             try
             {
-                await _syncSitesService.SyncAsync();
+                await _monitorSitesService.MonitorAllAsync();
             }
             catch (Exception e)
             {
