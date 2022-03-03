@@ -1,6 +1,6 @@
 namespace RussianSitesStatus.Models;
 
-public class SiteDto
+public class SiteVM
 {
     public string Id { get; set; }
     public string Name { get; set; }
@@ -17,7 +17,7 @@ public class SiteDto
     }
 }
 
-public class SiteDetailsDto : SiteDto
+public class SiteDetailsVM : SiteVM
 {
     public List<ServerDto> Servers { get; set; }
     public int Timeout { get; set; }
