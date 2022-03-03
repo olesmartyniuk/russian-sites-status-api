@@ -11,14 +11,14 @@ public class StatusFetcherBackgroundService : BackgroundService
     private const int ONE_SECOND = 1000;
 
     private readonly StatusCakeService _statusCakeService;
-    private readonly Storage<Site> _liteStatusStorage;
-    private readonly Storage<SiteDetails> _fullStatusStorage;
+    private readonly Storage<SiteDto> _liteStatusStorage;
+    private readonly Storage<SiteDetailsDto> _fullStatusStorage;
     private readonly ILogger<StatusFetcherBackgroundService> _logger;
 
     public StatusFetcherBackgroundService(
         StatusCakeService statusCakeService,
-        Storage<Site> liteStatusStorage,
-        Storage<SiteDetails> fullStatusStorage,
+        Storage<SiteDto> liteStatusStorage,
+        Storage<SiteDetailsDto> fullStatusStorage,
         ILogger<StatusFetcherBackgroundService> logger)
     {
         _statusCakeService = statusCakeService;
@@ -45,7 +45,7 @@ public class StatusFetcherBackgroundService : BackgroundService
         }
     }
 
-    private async Task UpdateFullStatuses(IEnumerable<Site> statuses)
+    private async Task UpdateFullStatuses(IEnumerable<SiteDto> statuses)
     {
         foreach (var batch in statuses.Chunk(REQUESTS_PER_SECOND_LIMIT))
         {
@@ -55,7 +55,7 @@ public class StatusFetcherBackgroundService : BackgroundService
                 var history = await GetHistory(status);
 
                 var data = uptimeCheck.data;
-                var siteStatus = new SiteDetails
+                var siteStatus = new SiteDetailsDto
                 {
                     Id = data.id,
                     Name = data.name.NormalizeSiteName(),
@@ -64,7 +64,7 @@ public class StatusFetcherBackgroundService : BackgroundService
                     Uptime = data.uptime,
                     WebsiteUrl = data.website_url,                    
                     LastTestedAt = data.last_tested_at,                    
-                    Servers = data.servers.Select(s => new Server
+                    Servers = data.servers.Select(s => new ServerDto
                     {
                         Region = s.region,
                         RegionCode = s.region_code,
@@ -119,7 +119,7 @@ public class StatusFetcherBackgroundService : BackgroundService
         }
     }
 
-    private async Task<Dictionary<string, UptimeCheckHistoryItem>> GetHistory(Site status)
+    private async Task<Dictionary<string, UptimeCheckHistoryItem>> GetHistory(SiteDto status)
     {
         var result = new Dictionary<string, UptimeCheckHistoryItem>();
         var history = await _statusCakeService.GetHistory(status.Id);
@@ -179,11 +179,11 @@ public class StatusFetcherBackgroundService : BackgroundService
         };
     }
 
-    private async Task<IEnumerable<Site>> UpdateLiteStatuses()
+    private async Task<IEnumerable<SiteDto>> UpdateLiteStatuses()
     {
         var statuses = await _statusCakeService.GetAllStatuses();
 
-        var siteStatuses = statuses.Select(status => new Site
+        var siteStatuses = statuses.Select(status => new SiteDto
         {
             Id = status.id,
             Name = status.name.NormalizeSiteName(),

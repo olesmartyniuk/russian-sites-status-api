@@ -3,7 +3,7 @@ using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
 
 namespace RussianSitesStatus.Services;
-public class Storage<T> where T : Site
+public class Storage<T> where T : SiteDto
 {
     private readonly ReaderWriterLockSlim _lock = new();
     private readonly Dictionary<string, T> _items = new();
