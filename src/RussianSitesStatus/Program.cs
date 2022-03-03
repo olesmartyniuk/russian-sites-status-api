@@ -10,6 +10,7 @@ using RussianSitesStatus.Auth;
 using RussianSitesStatus.Database;
 using Microsoft.EntityFrameworkCore;
 using RussianSitesStatus.Services.StatusCake;
+using RussianSitesStatus.Database.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ AddAuthentication(builder);
 AddCors(builder);
 
 builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
+builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
 
 builder.WebHost.UseKestrel((context, options) =>
 {
@@ -92,15 +94,19 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddSingleton<StatusCakeService>();
     services.AddSingleton<InMemoryStorage<SiteVM>>();
     services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
+    services.AddSingleton<BaseInMemoryStorage<Region>>();
     services.AddSingleton<StatusCakeUpCheckService>();
-    services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
-    services.AddSingleton<IFetchDataService, StatusCakeFetchDataService>();
+    services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();       
+    services.AddSingleton<IFetchDataService, FetchDataService>();
+    services.AddSingleton<MonitorSitesStatusService>();
+    services.AddSingleton<ICheckSiteService, CheckSiteService>();
 
     services.AddScoped<DatabaseStorage>();
-    services.AddScoped<ISyncSitesService, SyncSitesDatabaseService>();    
+    services.AddScoped<ISyncSitesService, SyncSitesDatabaseService>();
 
     services.AddHostedService<MemoryDataFetcher>();
     services.AddHostedService<SyncSitesWorker>();
+    services.AddHostedService<MonitorStatusWorker>();
 }
 
 static void AddCors(WebApplicationBuilder builder)
