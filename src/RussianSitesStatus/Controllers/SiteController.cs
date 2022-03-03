@@ -1,24 +1,27 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RussianSitesStatus.Auth;
+using RussianSitesStatus.Database.Models;
+using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Services;
+using System.Web;
 
 namespace RussianSitesStatus.Controllers;
 
 [ApiController]
 public class SiteController : ControllerBase
 {
-    private readonly Storage<Site> _liteStatusStorage;
-    private readonly Storage<SiteDetails> _fullStatusStorage;
-    private readonly UpCheckService _upCheckService;
+    private readonly Storage<SiteDto> _liteStatusStorage;
+    private readonly Storage<SiteDetailsDto> _fullStatusStorage;
+    private readonly DatabaseStorage _databaseStorage;
 
-    public SiteController(Storage<Site> liteStatusStorage, Storage<SiteDetails> fullStatusStorage, UpCheckService upCheckService)
+    public SiteController(Storage<SiteDto> liteStatusStorage, Storage<SiteDetailsDto> fullStatusStorage, DatabaseStorage databaseStorage)
     {
         _liteStatusStorage = liteStatusStorage;
         _fullStatusStorage = fullStatusStorage;
-        _upCheckService = upCheckService;
+        _databaseStorage = databaseStorage;
     }
 
     /// <summary>
@@ -34,7 +37,7 @@ public class SiteController : ControllerBase
     /// <response code="200">List of sites</response>
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites")]
-    public ActionResult<List<Site>> GetAllSites()
+    public ActionResult<List<SiteDto>> GetAll()
     {
         var result = _liteStatusStorage
             .GetAll()
@@ -58,7 +61,7 @@ public class SiteController : ControllerBase
     /// <response code="404">Site not found</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/{id}")]
-    public ActionResult<SiteDetails> GetSite(string id)
+    public ActionResult<SiteDetailsDto> Get(string id)
     {
         var result = _fullStatusStorage.Get(id);
 
@@ -85,7 +88,7 @@ public class SiteController : ControllerBase
     /// <response code="400">Bad request</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/search")]
-    public ActionResult<IEnumerable<SiteDetails>> Search([FromQuery] string text)
+    public ActionResult<IEnumerable<SiteDetailsDto>> Search([FromQuery] string text)
     {
         if (string.IsNullOrEmpty(text) | text.Length < 3)
         {
@@ -107,14 +110,66 @@ public class SiteController : ControllerBase
     /// </remarks>    
     /// <param name="siteUrl">Site URL to monitor</param>
     /// <response code="201">Created</response>
+    /// <response code="400">Bad request</response> 
     /// <response code="401">Unauthorized</response> 
+    /// <response code="409">Conflict</response> 
     /// <response code="500">Internal server error</response> 
     [HttpPost("api/sites/{siteUrl}")]
-    [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
-    public async Task<ActionResult> AddNewSiteAsync([FromRoute]string siteUrl)
+   // [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
+    public async Task<ActionResult> Add([FromRoute()]string siteUrl)
     {
-        await _upCheckService.AddUptimeCheckAsync(siteUrl, new List<string> { Tag.CustomSite });
+        siteUrl = HttpUtility
+            .UrlDecode(siteUrl)
+            .NormalizeSiteUrl();
+        if (siteUrl.Length < 3)
+        {
+            return BadRequest("Site URL should be at least 3 symbols");
+        }
 
-        return Created("", "");
+        var originalSite = await _databaseStorage.GetSiteByUrl(siteUrl);
+        if (originalSite != null)
+        {
+            return Conflict(originalSite);
+        }
+
+        var site = new Site
+        {
+            Name = siteUrl.NormalizeSiteName(),
+            CreatedAt = DateTime.UtcNow,
+            Url = siteUrl
+        };
+
+        var newSite = await _databaseStorage.AddSite(site);
+
+        return CreatedAtAction(nameof(Get), new { id = newSite.Id }, newSite);
+    }
+
+    /// <summary>
+    /// Remove site from monitoring
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///    DELETE https://russian-sites-status-api.herokuapp.com/api/sites/82197
+    ///
+    /// </remarks>    
+    /// <param name="siteId">Site Id to remove</param>
+    /// <response code="204">No content</response>
+    /// <response code="401">Unauthorized</response> 
+    /// <response code="404">Not found</response> 
+    /// <response code="500">Internal server error</response> 
+    [HttpDelete("api/sites/{siteId}")]
+    // [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
+    public async Task<ActionResult> Delete(long siteId)
+    {
+        var originalSite = await _databaseStorage.GetSite(siteId);
+        if (originalSite == null)
+        {
+            return NotFound($"Site is not found by id '{siteId}'.");
+        }
+
+        await _databaseStorage.DeleteSite(originalSite.Id);
+
+        return NoContent();
     }
 }
