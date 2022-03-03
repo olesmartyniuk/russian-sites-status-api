@@ -10,12 +10,12 @@ public class MonitorSitesStatusService
     private static int IterationDuration = 60000;
 
     private readonly InMemoryStorage<SiteVM> _liteInMemorySiteStorage;
-    private readonly BaseInMemoryStorage<Region> _inMemoryRegionStorage;
+    private readonly BaseInMemoryStorage<RegionVM> _inMemoryRegionStorage;
     private readonly ICheckSiteService _checkSiteService;
     private readonly ILogger<MonitorSitesStatusService> _logger;
 
     public MonitorSitesStatusService(
-         BaseInMemoryStorage<Region> inMemoryRegionStorage,
+         BaseInMemoryStorage<RegionVM> inMemoryRegionStorage,
         InMemoryStorage<SiteVM> liteInMemorySiteStorage,
         ICheckSiteService checkSiteService,
         ILogger<MonitorSitesStatusService> logger
