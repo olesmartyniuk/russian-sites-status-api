@@ -95,6 +95,7 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddSingleton<UpCheckService>();
     services.AddSingleton<SyncSitesService>();
     services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
+    services.AddSingleton<DatabaseStorage>();
 
     services.AddHostedService<StatusFetcherBackgroundService>();
     services.AddHostedService<SyncSitesBackgroundService>();
