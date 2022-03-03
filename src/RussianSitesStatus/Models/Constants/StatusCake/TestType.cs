@@ -1,4 +1,4 @@
-﻿namespace RussianSitesStatus.Models.Constants;
+﻿namespace RussianSitesStatus.Models.Constants.StatusCake;
 
 public static class TestType
 {

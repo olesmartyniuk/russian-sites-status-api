@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication;
 using RussianSitesStatus.Auth;
 using RussianSitesStatus.Database;
 using Microsoft.EntityFrameworkCore;
+using RussianSitesStatus.Services.StatusCake;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -89,14 +90,16 @@ static void AddServices(WebApplicationBuilder builder)
     });
 
     services.AddSingleton<StatusCakeService>();
-    services.AddSingleton<Storage<SiteDto>>();
-    services.AddSingleton<Storage<SiteDetailsDto>>();
+    services.AddSingleton<Storage<SiteVM>>();
+    services.AddSingleton<Storage<SiteDetailsVM>>();
 
-    services.AddSingleton<UpCheckService>();
+    services.AddSingleton<StatusCakeUpCheckService>();
     services.AddSingleton<SyncSitesService>();
     services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
 
     services.AddScoped<DatabaseStorage>();
+
+    services.AddSingleton<IDataService, StatusCakeDataService>();
 
     services.AddHostedService<StatusFetcherBackgroundService>();
     services.AddHostedService<SyncSitesBackgroundService>();

@@ -1,7 +1,9 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Models.Constants;
+using RussianSitesStatus.Models.Constants.StatusCake;
 using RussianSitesStatus.Services.Contracts;
+using RussianSitesStatus.Services.StatusCake;
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 
@@ -14,12 +16,12 @@ public class SyncSitesService
     private readonly HttpClient _httpClient;
     private readonly IEnumerable<ISiteSource> _siteSources;
     private readonly StatusCakeService _statusCakeService;
-    private readonly Storage<SiteDto> _liteStatusStorage;
-    private readonly UpCheckService _upCheckService;
+    private readonly Storage<SiteVM> _liteStatusStorage;
+    private readonly StatusCakeUpCheckService _upCheckService;
     private readonly ILogger<SyncSitesService> _logger;
     private static readonly List<string> _monitoringRegions = new()
     {
-        "novosibirsk",        
+        "novosibirsk",
         "stockholm",
         "frankfurt",
         "tokyo",
@@ -35,9 +37,9 @@ public class SyncSitesService
     public SyncSitesService(IConfiguration configuration,
         IEnumerable<ISiteSource> siteSources,
         StatusCakeService statusCakeService,
-        Storage<SiteDto> liteStatusStorage,
+        Storage<SiteVM> liteStatusStorage,
         ILogger<SyncSitesService> logger,
-        UpCheckService upCheckService)
+        StatusCakeUpCheckService upCheckService)
     {
         var apiKey = configuration["STATUS_CAKE_API_KEY"];
 
@@ -100,20 +102,6 @@ public class SyncSitesService
         await Task.WhenAll(taskList);
     }
 
-    private static UptimeCheckItem BuildNewUptimeCheckItem(string url)
-    {
-        var newUptimeCheckItem = new UptimeCheckItem
-        {
-            website_url = url,
-            name = url.NormalizeSiteName(),
-            check_rate = Rate.Defaul,
-            test_type = TestType.HTTP,
-            regions = _monitoringRegions,
-            follow_redirects = true
-        };
-        return newUptimeCheckItem;
-    }
-
     private async Task<IEnumerable<string>> GetSitesFromAllSources()
     {
         var allSites = new ConcurrentBag<string>();
@@ -126,7 +114,7 @@ public class SyncSitesService
                 {
                     var sites = (await siteSource.GetAllAsync())
                         .Where(url => url.IsValid());
-                    
+
                     allSites.Add(sites);
                 }
                 catch (Exception ex)
