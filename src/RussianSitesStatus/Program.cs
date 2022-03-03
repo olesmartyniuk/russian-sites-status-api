@@ -7,14 +7,16 @@ using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication;
 using RussianSitesStatus.Auth;
+using RussianSitesStatus.Database;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-AddService(builder.Services);
+AddServices(builder);
 AddControllers(builder);
-AddSwagger(builder.Services);
+AddSwagger(builder);
 AddAuthentication(builder);
-AddCors(builder.Services);
+AddCors(builder);
 
 builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
 
@@ -41,11 +43,51 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+CreateDbIfNotExist(app);
+
 app.Run();
 
 
-static void AddService(IServiceCollection services)
+static void CreateDbIfNotExist(WebApplication app)
 {
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+
+    try
+    {
+        var context = services.GetRequiredService<ApplicationContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+
+        var migrations = context.Database.GetPendingMigrations().ToList();
+        if (migrations.Any())
+        {
+            logger.LogInformation("Service is going to run migrations: {migrations}.", string.Join(", ", migrations));
+        }
+        else
+        {
+            logger.LogInformation("There are no pending migrations");
+        }
+        context.Database.Migrate();
+        logger.LogInformation("The database has been successfully migrated.");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred creating the DB.");
+    }
+}
+
+
+static void AddServices(WebApplicationBuilder builder)
+{
+    var services = builder.Services;
+
+    services.AddDbContext<ApplicationContext>(options =>
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString());
+    });
+
     services.AddSingleton<StatusCakeService>();
     services.AddSingleton<Storage<Site>>();
     services.AddSingleton<Storage<SiteDetails>>();
@@ -58,9 +100,9 @@ static void AddService(IServiceCollection services)
     services.AddHostedService<SyncSitesBackgroundService>();
 }
 
-static void AddCors(IServiceCollection services)
+static void AddCors(WebApplicationBuilder builder)
 {
-    services.AddCors(options =>
+    builder.Services.AddCors(options =>
     {
         options.AddPolicy("CorsPolicy",
             builder => builder
@@ -70,9 +112,9 @@ static void AddCors(IServiceCollection services)
     });
 }
 
-static void AddSwagger(IServiceCollection services)
+static void AddSwagger(WebApplicationBuilder builder)
 {
-    services.AddSwaggerGen(c =>
+    builder.Services.AddSwaggerGen(c =>
     {
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
