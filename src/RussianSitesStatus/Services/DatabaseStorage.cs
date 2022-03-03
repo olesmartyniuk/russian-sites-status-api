@@ -31,6 +31,14 @@ public class DatabaseStorage
         return await _db.Sites.FindAsync(siteId);
     }
 
+    public async Task<Site> GetSiteByUrl(string siteUrl)
+    {
+        return await _db.Sites
+            .Where(s => s.Url == siteUrl)
+            .AsNoTracking()
+            .SingleOrDefaultAsync();
+    }
+
     public async Task<IEnumerable<Site>> GetAllSites()
     {
         return await _db.Sites
@@ -61,7 +69,7 @@ public class DatabaseStorage
         _db.Sites.Add(newSite);
 
         await _db.SaveChangesAsync();
-        
+
         return newSite;
     }
 
@@ -82,5 +90,12 @@ public class DatabaseStorage
         await _db.SaveChangesAsync();
 
         return newCheck;
+    }
+
+    public async Task DeleteSite(long siteId)
+    {
+        var originalSite = _db.Sites.Find(siteId);
+        _db.Sites.Remove(originalSite);
+        await _db.SaveChangesAsync();
     }
 }

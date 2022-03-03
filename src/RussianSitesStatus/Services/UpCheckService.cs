@@ -6,9 +6,9 @@ namespace RussianSitesStatus.Services;
 public class UpCheckService
 {
     public StatusCakeService _statusCakeService { get; set; }
-    public Storage<Site> _liteStatusStorage { get; set; }
+    public Storage<SiteDto> _liteStatusStorage { get; set; }
 
-    public UpCheckService(Storage<Site> liteStatusStorage, StatusCakeService statusCakeService)
+    public UpCheckService(Storage<SiteDto> liteStatusStorage, StatusCakeService statusCakeService)
     {
         _statusCakeService = statusCakeService;
         _liteStatusStorage = liteStatusStorage;

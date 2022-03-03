@@ -89,13 +89,14 @@ static void AddServices(WebApplicationBuilder builder)
     });
 
     services.AddSingleton<StatusCakeService>();
-    services.AddSingleton<Storage<Site>>();
-    services.AddSingleton<Storage<SiteDetails>>();
+    services.AddSingleton<Storage<SiteDto>>();
+    services.AddSingleton<Storage<SiteDetailsDto>>();
 
     services.AddSingleton<UpCheckService>();
     services.AddSingleton<SyncSitesService>();
     services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
-    services.AddSingleton<DatabaseStorage>();
+
+    services.AddScoped<DatabaseStorage>();
 
     services.AddHostedService<StatusFetcherBackgroundService>();
     services.AddHostedService<SyncSitesBackgroundService>();
