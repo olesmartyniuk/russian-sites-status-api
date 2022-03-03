@@ -103,14 +103,13 @@ static void AddServices(WebApplicationBuilder builder)
 
     services.AddScoped<DatabaseStorage>();
 
-    services.AddSingleton<IFetchDataService, StatusCakeFetchDataService>();
+    services.AddSingleton<IFetchDataService, FetchDataService>();
     services.AddSingleton<MonitorSitesStatusService>();
     services.AddSingleton<ICheckSiteService, CheckSiteService>();
 
     services.AddHostedService<MemoryDataFetcher>();
     services.AddHostedService<SyncSitesWorker>();
     services.AddHostedService<MonitorStatusWorker>();
-
 }
 
 static void AddCors(WebApplicationBuilder builder)
