@@ -94,7 +94,7 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddSingleton<StatusCakeService>();
     services.AddSingleton<InMemoryStorage<SiteVM>>();
     services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
-    services.AddSingleton<BaseInMemoryStorage<Region>>();
+    services.AddSingleton<BaseInMemoryStorage<RegionVM>>();
 
     services.AddSingleton<StatusCakeUpCheckService>();
     services.AddSingleton<ISyncSitesService, SyncStatusCakeSitesService>();
