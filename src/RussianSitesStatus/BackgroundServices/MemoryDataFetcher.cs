@@ -1,3 +1,4 @@
+using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Services;
 using RussianSitesStatus.Services.Contracts;
@@ -10,19 +11,23 @@ public class MemoryDataFetcher : BackgroundService
 
     private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
     private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
+    private readonly BaseInMemoryStorage<Region> _regionStorage;
     private readonly ILogger<MemoryDataFetcher> _logger;
     private readonly IFetchDataService _fetchDataService;
 
     public MemoryDataFetcher(
         InMemoryStorage<SiteVM> liteStatusStorage,
         InMemoryStorage<SiteDetailsVM> fullStatusStorage,
+        BaseInMemoryStorage<Region> regionStorage,
         ILogger<MemoryDataFetcher> logger,
-        IFetchDataService dataService)
+        IFetchDataService dataService
+       )
     {
         _liteStatusStorage = liteStatusStorage;
         _fullStatusStorage = fullStatusStorage;
         _logger = logger;
         _fetchDataService = dataService;
+        _regionStorage = regionStorage;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -47,8 +52,8 @@ public class MemoryDataFetcher : BackgroundService
         //TODOPavlo: Create a new implemantaion of IFetchDataService, register it in DI container
 
         var sites = await _fetchDataService.GetAllAsync();
+        
         _liteStatusStorage.ReplaceAll(sites);
-
         _fullStatusStorage.ReplaceAll(await _fetchDataService.GetAllSitesDetailsAsync(sites));
     }
 }
