@@ -1,6 +1,5 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
-using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Models.Constants.StatusCake;
 using RussianSitesStatus.Models.StatusCake;
 

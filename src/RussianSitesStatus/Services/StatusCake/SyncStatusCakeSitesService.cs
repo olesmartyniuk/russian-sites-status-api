@@ -1,14 +1,12 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
-using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Models.Constants.StatusCake;
 using RussianSitesStatus.Services.Contracts;
-using RussianSitesStatus.Services.StatusCake;
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 
-namespace RussianSitesStatus.Services;
-public class SyncSitesService
+namespace RussianSitesStatus.Services.StatusCake;
+public class SyncStatusCakeSitesService : ISyncSitesService
 {
     private const int REQUESTS_PER_SECOND_LIMIT = 10;
     private const int ONE_SECOND = 1000;
@@ -18,7 +16,7 @@ public class SyncSitesService
     private readonly StatusCakeService _statusCakeService;
     private readonly Storage<SiteVM> _liteStatusStorage;
     private readonly StatusCakeUpCheckService _upCheckService;
-    private readonly ILogger<SyncSitesService> _logger;
+    private readonly ILogger<SyncStatusCakeSitesService> _logger;
     private static readonly List<string> _monitoringRegions = new()
     {
         "novosibirsk",
@@ -34,11 +32,11 @@ public class SyncSitesService
         "sydney"
     };
 
-    public SyncSitesService(IConfiguration configuration,
+    public SyncStatusCakeSitesService(IConfiguration configuration,
         IEnumerable<ISiteSource> siteSources,
         StatusCakeService statusCakeService,
         Storage<SiteVM> liteStatusStorage,
-        ILogger<SyncSitesService> logger,
+        ILogger<SyncStatusCakeSitesService> logger,
         StatusCakeUpCheckService upCheckService)
     {
         var apiKey = configuration["STATUS_CAKE_API_KEY"];

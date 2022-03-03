@@ -2,7 +2,7 @@
 
 namespace RussianSitesStatus.Services.Contracts
 {
-    public interface IDataService
+    public interface IFetchDataService
     {
         Task<IEnumerable<SiteVM>> GetAllAsync();
 
