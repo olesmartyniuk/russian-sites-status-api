@@ -76,6 +76,7 @@ public class DatabaseStorage
     public async Task<IEnumerable<Check>> GetLastCheckBySiteId(long siteId)
     {
         return await _db.Checks
+            .Include(c => c.Region)
             .AsNoTracking()
             .Where(c => c.SiteId == siteId)
             .OrderByDescending(c => c.CheckedAt)
@@ -96,6 +97,29 @@ public class DatabaseStorage
     {
         var originalSite = _db.Sites.Find(siteId);
         _db.Sites.Remove(originalSite);
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Region>> GetAllRegions()
+    {
+        return await _db.Regions
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<Region> AddRegion(Region newRegion)
+    {
+        _db.Regions.Add(newRegion);
+
+        await _db.SaveChangesAsync();
+
+        return newRegion;
+    }
+
+    public async Task DeleteRegion(long regionId)
+    {
+        var originalRegion = _db.Regions.Find(regionId);
+        _db.Regions.Remove(originalRegion);
         await _db.SaveChangesAsync();
     }
 }

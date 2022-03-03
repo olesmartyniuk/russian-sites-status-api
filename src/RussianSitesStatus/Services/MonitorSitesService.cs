@@ -1,7 +1,7 @@
 using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Services.Contracts;
 using RussianSitesStatus.Services.StatusCake;
-using Proxy = RussianSitesStatus.Database.Models.Proxy;
+using Region = RussianSitesStatus.Database.Models.Region;
 
 namespace RussianSitesStatus.Services;
 public class MonitorSitesService
@@ -10,7 +10,7 @@ public class MonitorSitesService
     private static int IterationDuration = 60000;
 
     private readonly BaseStorage<Site> _inMemorySiteStorage;
-    private readonly BaseStorage<Proxy> _inMemoryRegionStorage;
+    private readonly BaseStorage<Region> _inMemoryRegionStorage;
     private readonly ICheckSiteService _checkSiteService;
 
     private readonly ILogger<SyncSitesService> _logger;
@@ -20,7 +20,7 @@ public class MonitorSitesService
         BaseStorage<Site> liteStatusStorage,
         ILogger<SyncSitesService> logger,
         StatusCakeUpCheckService upCheckService,
-        BaseStorage<Proxy> inMemoryRegionStorage,
+        BaseStorage<Region> inMemoryRegionStorage,
         ICheckSiteService checkSiteService)
     {
 
