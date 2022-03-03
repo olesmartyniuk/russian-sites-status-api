@@ -46,9 +46,8 @@ public class MemoryDataFetcher : BackgroundService
     {
         //TODOPavlo: Create a new implemantaion of IFetchDataService, register it in DI container
 
-        var sites = await _fetchDataService.GetAllAsync();
-        _liteStatusStorage.ReplaceAll(sites);
-
-        _fullStatusStorage.ReplaceAll(await _fetchDataService.GetAllSitesDetailsAsync(sites));
+        var sites = await _fetchDataService.GetAllSitesDetailsAsync();
+        _liteStatusStorage.ReplaceAll(sites.Select(vm=> vm as SiteVM));
+        _fullStatusStorage.ReplaceAll(sites);
     }
 }

@@ -100,7 +100,7 @@ static void AddServices(WebApplicationBuilder builder)
 
     services.AddScoped<DatabaseStorage>();
 
-    services.AddSingleton<IFetchDataService, StatusCakeFetchDataService>();
+    services.AddSingleton<IFetchDataService, FetchDataService>();
 
     services.AddHostedService<MemoryDataFetcher>();
     services.AddHostedService<SyncSitesWorker>();
