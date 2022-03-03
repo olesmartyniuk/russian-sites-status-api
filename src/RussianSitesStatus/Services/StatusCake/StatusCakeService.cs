@@ -1,5 +1,6 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
+using RussianSitesStatus.Models.StatusCake;
 using System.Net.Http.Headers;
 using System.Text.Json;
 

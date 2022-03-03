@@ -1,5 +1,6 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
+using RussianSitesStatus.Models.StatusCake;
 using RussianSitesStatus.Services.Contracts;
 
 namespace RussianSitesStatus.Services.StatusCake;
