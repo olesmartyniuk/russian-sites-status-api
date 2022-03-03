@@ -11,15 +11,10 @@ public class Check : Entity
     public int StatusCode { get; set; }
     public int SpentTime { get; set; }
     public DateTime CheckedAt { get; set; }
-    public Proxy Region { get; set; }
+    public long RegionId { get; set; }
+    public Region Region { get; set; }
 }
 
-//public enum Region
-//{
-//    Ukraine = 1,
-//    Russia = 2,
-//    Europe = 3
-//}
 public enum CheckStatus
 {
     Available = 1,
@@ -49,12 +44,13 @@ public class CheckConfiguration : IEntityTypeConfiguration<Check>
             .Property(p => p.SpentTime)
             .IsRequired();
         builder
-            .Property(p => p.Region)
+            .Property(p => p.RegionId)
             .IsRequired();
         builder
             .HasOne(r => r.Site)
             .WithMany(a => a.Checks)
             .HasForeignKey(r => r.SiteId);
-
+        builder
+            .HasOne(c => c.Region);
     }
 }

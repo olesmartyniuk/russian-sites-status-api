@@ -3,20 +3,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace RussianSitesStatus.Database.Models;
 
-//TODOALEX: Create migration for this entity
-public class Proxy : Entity
+public class Region : Entity
 {
     public string Name { get; set; }
-    public string Url { get; set; } //contains port
-
-    public Proxy()
-    {
-    }
+    public string ProxyUrl { get; set; } //contains port
 }
 
-public class RegionConfiguration : IEntityTypeConfiguration<Proxy>
+public class RegionConfiguration : IEntityTypeConfiguration<Region>
 {
-    public void Configure(EntityTypeBuilder<Proxy> builder)
+    public void Configure(EntityTypeBuilder<Region> builder)
     {
         builder
             .Property(p => p.Id)
@@ -25,7 +20,7 @@ public class RegionConfiguration : IEntityTypeConfiguration<Proxy>
             .Property(p => p.Name)
             .IsRequired();
         builder
-            .Property(p => p.Url)
+            .Property(p => p.ProxyUrl)
             .IsRequired();
     }
 }
