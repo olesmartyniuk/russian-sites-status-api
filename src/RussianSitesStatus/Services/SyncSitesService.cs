@@ -16,21 +16,7 @@ public class SyncSitesService
     private readonly StatusCakeService _statusCakeService;
     private readonly Storage<Site> _liteStatusStorage;
     private readonly UpCheckService _upCheckService;
-    private readonly ILogger<SyncSitesService> _logger;
-    private static readonly List<string> _monitoringRegions = new()
-    {
-        "novosibirsk",        
-        "stockholm",
-        "frankfurt",
-        "tokyo",
-        "warsaw",
-        "hong-kong",
-        "mexico-city",
-        "london",
-        "toronto",
-        "singapore",
-        "sydney"
-    };
+    private readonly ILogger<SyncSitesService> _logger;   
 
     public SyncSitesService(IConfiguration configuration,
         IEnumerable<ISiteSource> siteSources,
@@ -98,21 +84,7 @@ public class SyncSitesService
         }
 
         await Task.WhenAll(taskList);
-    }
-
-    private static UptimeCheckItem BuildNewUptimeCheckItem(string url)
-    {
-        var newUptimeCheckItem = new UptimeCheckItem
-        {
-            website_url = url,
-            name = url.NormalizeSiteName(),
-            check_rate = Rate.Defaul,
-            test_type = TestType.HTTP,
-            regions = _monitoringRegions,
-            follow_redirects = true
-        };
-        return newUptimeCheckItem;
-    }
+    }    
 
     private async Task<IEnumerable<string>> GetSitesFromAllSources()
     {
