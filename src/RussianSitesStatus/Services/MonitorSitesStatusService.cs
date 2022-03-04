@@ -42,7 +42,7 @@ public class MonitorSitesStatusService
         var timer = new Stopwatch();
         timer.Start();
 
-        var allSites = _liteInMemorySiteStorage.GetAll(10);
+        var allSites = _liteInMemorySiteStorage.GetAll().Take(10);
         var allRegions = _inMemoryRegionStorage.GetAll().Take(3);
         if (!allSites.Any() || !allRegions.Any())
         {
