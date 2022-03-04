@@ -8,6 +8,21 @@ public class UpCheckService
     public StatusCakeService _statusCakeService { get; set; }
     public Storage<Site> _liteStatusStorage { get; set; }
 
+    private static readonly List<string> _monitoringRegions = new()
+    {
+        "novosibirsk",
+        "stockholm",
+        "frankfurt",
+        "tokyo",
+        "warsaw",
+        "hong-kong",
+        "mexico-city",
+        "london",
+        "toronto",
+        "singapore",
+        "sydney"
+    };
+
     public UpCheckService(Storage<Site> liteStatusStorage, StatusCakeService statusCakeService)
     {
         _statusCakeService = statusCakeService;
@@ -35,9 +50,10 @@ public class UpCheckService
             website_url = url,
             name = url.NormalizeSiteName(),
             check_rate = Rate.Defaul,
-            tags = tags,
             test_type = TestType.HTTP,
-            regions = new List<string> { "singapore", "novosibirsk" } //TODOVK: Provide list of regions, exists 100500 diff regions
+            regions = _monitoringRegions,
+            follow_redirects = true,
+            tags = tags
         };
         return newUptimeCheckItem;
     }
