@@ -1,10 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RussianSitesStatus.Auth;
 using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
-using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Services;
 using System.Web;
 

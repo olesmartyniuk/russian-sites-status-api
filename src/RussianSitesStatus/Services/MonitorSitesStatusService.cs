@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Options;
 using RussianSitesStatus.Configuration;
+using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Services.Contracts;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace RussianSitesStatus.Services;
@@ -10,10 +12,13 @@ public class MonitorSitesStatusService
     private static int ITERATION_NUMBER = 10;
     private readonly int _rateInMilliseconds;
 
+    private ConcurrentBag<Check> Checks = new ConcurrentBag<Check>();
+
     private readonly InMemoryStorage<SiteVM> _liteInMemorySiteStorage;
     private readonly BaseInMemoryStorage<RegionVM> _inMemoryRegionStorage;
     private readonly ICheckSiteService _checkSiteService;
     private readonly ILogger<MonitorSitesStatusService> _logger;
+    private readonly DatabaseStorage _databaseStorage;
 
     public MonitorSitesStatusService(
         BaseInMemoryStorage<RegionVM> inMemoryRegionStorage,
@@ -21,7 +26,7 @@ public class MonitorSitesStatusService
         ICheckSiteService checkSiteService,
         IOptions<MonitorSitesConfiguration> configurations,
         ILogger<MonitorSitesStatusService> logger
-       )
+        , DatabaseStorage databaseStorage)
     {
 
         _liteInMemorySiteStorage = liteInMemorySiteStorage;
@@ -29,6 +34,7 @@ public class MonitorSitesStatusService
         _inMemoryRegionStorage = inMemoryRegionStorage;
         _rateInMilliseconds = (int)TimeSpan.FromSeconds(configurations.Value.Rate).TotalMilliseconds;
         _logger = logger;
+        _databaseStorage = databaseStorage;
     }
 
     public async Task<int> MonitorAllAsync()
@@ -36,8 +42,8 @@ public class MonitorSitesStatusService
         var timer = new Stopwatch();
         timer.Start();
 
-        var allSites = _liteInMemorySiteStorage.GetAll();
-        var allRegions = _inMemoryRegionStorage.GetAll();
+        var allSites = new List<SiteVM>(_liteInMemorySiteStorage.GetAll().Take(10));
+        var allRegions = new List<RegionVM>(_inMemoryRegionStorage.GetAll().Take(3)); ;
         if (!allSites.Any() || !allRegions.Any())
         {
             _logger.LogWarning($"There is nothing to monitor. Regions number = {allRegions.Count()}, Sites number = {allSites.Count()}");
@@ -50,23 +56,28 @@ public class MonitorSitesStatusService
         {
             foreach (var item in batch)
             {
-                taskList.Add(CheckOneSiteOnAllRegionsAsync(item, allRegions));
+                taskList.Add(Task.Run(() => CheckOneSiteOnAllRegionsAsync(item, allRegions, Checks)));
             }
 
-            await Task.Delay(_rateInMilliseconds / ITERATION_NUMBER);
+            //await Task.Delay(_rateInMilliseconds / ITERATION_NUMBER);
+            //await Task.Delay(100);
         }
 
         await Task.WhenAll(taskList);
 
         timer.Stop();
-        return timer.Elapsed.Seconds;
+
+        await _databaseStorage.AddChecks(Checks.ToList());
+
+        return (int)timer.Elapsed.TotalSeconds;
     }
 
-    private async Task CheckOneSiteOnAllRegionsAsync(SiteVM site, IEnumerable<RegionVM> allRegions)
+    private async Task CheckOneSiteOnAllRegionsAsync(SiteVM site, IEnumerable<RegionVM> allRegions, ConcurrentBag<Check> checks)
     {
         foreach (var region in allRegions)
         {
-            await _checkSiteService.CheckAsync(site, region);
+            var check = await _checkSiteService.CheckAsync(site, region);
+            checks.Add(check);
         }
     }
 }

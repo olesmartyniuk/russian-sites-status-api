@@ -15,7 +15,7 @@ public class SyncSitesWorker : BackgroundService
         IServiceProvider serviceProvider,
         IServiceScopeFactory serviceFactory)
     {
-        _logger = logger;        
+        _logger = logger;
         _syncSitesConfiguration = serviceProvider
             .GetRequiredService<IOptions<SyncSitesConfiguration>>().Value;
         _serviceFactory = serviceFactory;
@@ -23,7 +23,7 @@ public class SyncSitesWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var serviceScope = _serviceFactory.CreateScope();        
+        using var serviceScope = _serviceFactory.CreateScope();
         var syncSitesService = serviceScope.ServiceProvider.GetRequiredService<ISyncSitesService>();
 
         await Task.Delay(TimeSpan.FromSeconds(_syncSitesConfiguration.WaitBeforeFirstIterationSeconds), stoppingToken);
@@ -31,7 +31,7 @@ public class SyncSitesWorker : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             try
-            {                
+            {
                 await syncSitesService.SyncAsync();
             }
             catch (Exception e)
