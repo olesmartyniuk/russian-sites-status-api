@@ -42,11 +42,10 @@ public class MonitorSitesStatusService
 
         var allSites = _liteInMemorySiteStorage.GetAll();
         var allRegions = _inMemoryRegionStorage.GetAll();
-        if (!allSites.Any() || !allRegions.Any())
+        if (IsValidForProcessing(allSites, allRegions))
         {
-            _logger.LogWarning($"There is nothing to monitor. Regions number = {allRegions.Count()}, Sites number = {allSites.Count()}");
             timer.Stop();
-            return timer.Elapsed.Seconds;
+            return (int)timer.Elapsed.TotalSeconds;
         }
 
         var taskList = new List<Task>();
@@ -64,6 +63,16 @@ public class MonitorSitesStatusService
         return (int)timer.Elapsed.TotalSeconds;
     }
 
+    private bool IsValidForProcessing(IEnumerable<SiteVM> allSites, IEnumerable<RegionVM> allRegions)
+    {
+        if (!allSites.Any() || !allRegions.Any())
+        {
+            _logger.LogWarning($"There is nothing to monitor. Regions number = {allRegions.Count()}, Sites number = {allSites.Count()}");
+            return false;
+        }
+
+        return true;
+    }
 
     private async Task CheckSitesOnAllRegionsAsync(IEnumerable<SiteVM> sites, IEnumerable<RegionVM> allRegions)
     {

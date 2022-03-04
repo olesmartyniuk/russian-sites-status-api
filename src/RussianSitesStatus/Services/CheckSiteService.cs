@@ -62,7 +62,7 @@ public class CheckSiteService : ICheckSiteService
         {
             timer.Stop();
             var statusCode = response is null ? -1 : (int)response.StatusCode;
-            newCheck = BuildCheck(statusCode, site, region, timer.Elapsed.Seconds);
+            newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds);
         }
         return newCheck;
 

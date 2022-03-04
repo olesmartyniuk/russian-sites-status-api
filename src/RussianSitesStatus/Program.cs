@@ -1,16 +1,15 @@
-using RussianSitesStatus.Services;
-using RussianSitesStatus.Models;
-using RussianSitesStatus.BackgroundServices;
-using RussianSitesStatus.Services.Contracts;
-using RussianSitesStatus.Configuration;
-using System.Reflection;
-using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication;
-using RussianSitesStatus.Auth;
-using RussianSitesStatus.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using RussianSitesStatus.Auth;
+using RussianSitesStatus.BackgroundServices;
+using RussianSitesStatus.Configuration;
+using RussianSitesStatus.Database;
+using RussianSitesStatus.Models;
+using RussianSitesStatus.Services;
+using RussianSitesStatus.Services.Contracts;
 using RussianSitesStatus.Services.StatusCake;
-using RussianSitesStatus.Database.Models;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,7 +93,7 @@ static void AddServices(WebApplicationBuilder builder)
                     optionsAction.EnableRetryOnFailure(2, TimeSpan.FromSeconds(5), null);
                 }
             );
-    }, ServiceLifetime.Transient);
+    }, ServiceLifetime.Scoped);
 
     services.AddSingleton<StatusCakeService>();
     services.AddSingleton<InMemoryStorage<SiteVM>>();
@@ -107,7 +106,7 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddTransient<MonitorSitesStatusService>();
     services.AddTransient<ICheckSiteService, CheckSiteService>();
 
-    services.AddTransient<DatabaseStorage>();
+    services.AddScoped<DatabaseStorage>();
     services.AddTransient<ISyncSitesService, SyncSitesDatabaseService>();
 
     services.AddHostedService<MemoryDataFetcher>();
