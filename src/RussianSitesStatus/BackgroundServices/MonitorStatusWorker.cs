@@ -8,15 +8,16 @@ public class MonitorStatusWorker : BackgroundService
 {
     private readonly MonitorSitesConfiguration _monitorSitesConfiguration;
 
-    private readonly MonitorSitesStatusService _monitorSitesService;
     private readonly ILogger<MonitorStatusWorker> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
     public MonitorStatusWorker(
         ILogger<MonitorStatusWorker> logger,
-        MonitorSitesStatusService syncSitesService,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        IServiceScopeFactory serviceScopeFactory)
     {
         _logger = logger;
-        _monitorSitesService = syncSitesService;
+        _serviceScopeFactory = serviceScopeFactory;
         _monitorSitesConfiguration = serviceProvider
             .GetRequiredService<IOptions<MonitorSitesConfiguration>>().Value;
     }
@@ -31,7 +32,12 @@ public class MonitorStatusWorker : BackgroundService
         {
             try
             {
-                spentTime = await _monitorSitesService.MonitorAllAsync();
+                using (var serviceScope = _serviceScopeFactory.CreateScope())
+                {
+                    var monitorSitesService = serviceScope.ServiceProvider.GetRequiredService<MonitorSitesStatusService>();
+
+                    spentTime = await monitorSitesService.MonitorAllAsync();
+                }
             }
             catch (Exception e)
             {

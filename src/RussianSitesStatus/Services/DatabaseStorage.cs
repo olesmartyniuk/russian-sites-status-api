@@ -101,6 +101,13 @@ public class DatabaseStorage
         return newCheck;
     }
 
+    public async Task AddChecks(IEnumerable<Check> newChecks)
+    {
+        _db.Checks.AddRange(newChecks);
+
+        await _db.SaveChangesAsync();
+    }
+
     public async Task DeleteSite(long siteId)
     {
         var originalSite = _db.Sites.Find(siteId);

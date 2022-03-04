@@ -10,14 +10,14 @@ public class CheckSiteService : ICheckSiteService
 {
     private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
     private readonly ILogger<CheckSiteService> _logger;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly DatabaseStorage _databaseStorage;
 
     private static readonly ConcurrentDictionary<string, HttpClient> HttpClientsByRegion = new();
 
-    public CheckSiteService(IServiceScopeFactory serviceScopeFactory, ILogger<CheckSiteService> logger)
+    public CheckSiteService(DatabaseStorage databaseStorage, ILogger<CheckSiteService> logger)
     {
         _logger = logger;
-        _serviceScopeFactory = serviceScopeFactory;
+        _databaseStorage = databaseStorage;
     }
 
     private HttpClient CreateHttpClient(RegionVM region)
@@ -38,10 +38,12 @@ public class CheckSiteService : ICheckSiteService
         return client;
     }
 
-    public async Task CheckAsync(SiteVM site, RegionVM region)
+    public async Task<Check> CheckAsync(SiteVM site, RegionVM region)
     {
         var timer = new Stopwatch();
         HttpResponseMessage response = null;
+        Check newCheck;
+
         try
         {
             var httpClient = HttpClientsByRegion.GetOrAdd(region.ProxyUrl, CreateHttpClient(region));
@@ -60,11 +62,13 @@ public class CheckSiteService : ICheckSiteService
         {
             timer.Stop();
             var statusCode = response is null ? -1 : (int)response.StatusCode;
-            await SaveCheckAsync(statusCode, site, region, timer.Elapsed.Seconds);
+            newCheck = BuildCheck(statusCode, site, region, timer.Elapsed.Seconds);
         }
+        return newCheck;
+
     }
 
-    public async Task SaveCheckAsync(int statusCode, SiteVM site, RegionVM region, int spentTime)
+    public Check BuildCheck(int statusCode, SiteVM site, RegionVM region, int spentTime)
     {
         var check = new Check
         {
@@ -75,11 +79,6 @@ public class CheckSiteService : ICheckSiteService
             RegionId = region.Id
         };
 
-        using (var serviceScope = _serviceScopeFactory.CreateScope())
-        {
-            var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
-
-            await databaseStorage.AddCheck(check);
-        }
+        return check;
     }
 }
