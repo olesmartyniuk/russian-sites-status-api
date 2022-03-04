@@ -47,7 +47,7 @@ public class InMemoryStorage<T> where T : SiteVM
         _lock.EnterReadLock();
         try
         {
-            return _items.Values;
+            return new List<T>(_items.Values);
         }
         finally
         {
@@ -67,7 +67,7 @@ public class InMemoryStorage<T> where T : SiteVM
             _lock.ExitWriteLock();
         }
     }
-    
+
     public IEnumerable<T> Search(string url)
     {
         url = url.NormalizeSiteName();
@@ -77,6 +77,6 @@ public class InMemoryStorage<T> where T : SiteVM
         var results = _items.Values
             .Where(x => searchRegex.IsMatch(x.WebsiteUrl));
 
-        return results;             
+        return results;
     }
 }

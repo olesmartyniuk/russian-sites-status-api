@@ -45,7 +45,7 @@ public class BaseInMemoryStorage<T> where T : BaseModelVM
         _lock.EnterReadLock();
         try
         {
-            return _items.Values;
+            return new List<T>(_items.Values);
         }
         finally
         {
