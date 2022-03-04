@@ -79,7 +79,16 @@ namespace RussianSitesStatus.Services
                 var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
                 var regions = await databaseStorage.GetAllRegions();
-                return regions.Select(region => new RegionVM { Id = region.Id, Name = region.Name, ProxyUrl = region.ProxyUrl, ProxyUser = region.ProxyUser, ProxyPassword = region.ProxyPassword }); //TODOVK: use automapper
+                return regions.Select(region => new RegionVM
+                {
+                    Id = region.Id,
+                    Name = region.Name,
+                    Code = region.Code,
+                    ProxyUrl = region.ProxyUrl,
+                    ProxyUser = region.ProxyUser,
+                    ProxyPassword = region.ProxyPassword,
+                    ProxyIsActive = region.ProxyIsActive
+                }); //TODOVK: use automapper
             }
         }
     }

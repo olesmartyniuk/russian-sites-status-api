@@ -40,8 +40,12 @@ public class MonitorSitesStatusService
         var timer = new Stopwatch();
         timer.Start();
 
-        var allSites = _liteInMemorySiteStorage.GetAll();
-        var allRegions = _inMemoryRegionStorage.GetAll();
+        var allSites = _liteInMemorySiteStorage
+            .GetAll();
+        var allRegions = _inMemoryRegionStorage
+            .GetAll()
+            .Where(r => r.ProxyIsActive);
+        
         if (!IsValidForProcessing(allSites, allRegions))
         {
             timer.Stop();

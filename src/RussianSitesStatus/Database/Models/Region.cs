@@ -10,6 +10,7 @@ public class Region : Entity
     public string ProxyUrl { get; set; } //contains port
     public string ProxyUser { get; set; }
     public string ProxyPassword { get; set; }
+    public bool ProxyIsActive { get; set; }
 }
 
 public class RegionConfiguration : IEntityTypeConfiguration<Region>
