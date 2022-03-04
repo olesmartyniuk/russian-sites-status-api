@@ -1,12 +1,12 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
-using RussianSitesStatus.Models.Constants.StatusCake;
+using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Services.Contracts;
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 
-namespace RussianSitesStatus.Services.StatusCake;
-public class SyncStatusCakeSitesService : ISyncSitesService
+namespace RussianSitesStatus.Services;
+public class SyncSitesService
 {
     private const int REQUESTS_PER_SECOND_LIMIT = 10;
     private const int ONE_SECOND = 1000;
@@ -14,12 +14,12 @@ public class SyncStatusCakeSitesService : ISyncSitesService
     private readonly HttpClient _httpClient;
     private readonly IEnumerable<ISiteSource> _siteSources;
     private readonly StatusCakeService _statusCakeService;
-    private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
-    private readonly StatusCakeUpCheckService _upCheckService;
-    private readonly ILogger<SyncStatusCakeSitesService> _logger;
+    private readonly Storage<Site> _liteStatusStorage;
+    private readonly UpCheckService _upCheckService;
+    private readonly ILogger<SyncSitesService> _logger;
     private static readonly List<string> _monitoringRegions = new()
     {
-        "novosibirsk",
+        "novosibirsk",        
         "stockholm",
         "frankfurt",
         "tokyo",
@@ -32,12 +32,12 @@ public class SyncStatusCakeSitesService : ISyncSitesService
         "sydney"
     };
 
-    public SyncStatusCakeSitesService(IConfiguration configuration,
+    public SyncSitesService(IConfiguration configuration,
         IEnumerable<ISiteSource> siteSources,
         StatusCakeService statusCakeService,
-        InMemoryStorage<SiteVM> liteStatusStorage,
-        ILogger<SyncStatusCakeSitesService> logger,
-        StatusCakeUpCheckService upCheckService)
+        Storage<Site> liteStatusStorage,
+        ILogger<SyncSitesService> logger,
+        UpCheckService upCheckService)
     {
         var apiKey = configuration["STATUS_CAKE_API_KEY"];
 
@@ -100,6 +100,20 @@ public class SyncStatusCakeSitesService : ISyncSitesService
         await Task.WhenAll(taskList);
     }
 
+    private static UptimeCheckItem BuildNewUptimeCheckItem(string url)
+    {
+        var newUptimeCheckItem = new UptimeCheckItem
+        {
+            website_url = url,
+            name = url.NormalizeSiteName(),
+            check_rate = Rate.Defaul,
+            test_type = TestType.HTTP,
+            regions = _monitoringRegions,
+            follow_redirects = true
+        };
+        return newUptimeCheckItem;
+    }
+
     private async Task<IEnumerable<string>> GetSitesFromAllSources()
     {
         var allSites = new ConcurrentBag<string>();
@@ -112,7 +126,7 @@ public class SyncStatusCakeSitesService : ISyncSitesService
                 {
                     var sites = (await siteSource.GetAllAsync())
                         .Where(url => url.IsValid());
-
+                    
                     allSites.Add(sites);
                 }
                 catch (Exception ex)
