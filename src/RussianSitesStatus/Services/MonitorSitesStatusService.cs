@@ -42,7 +42,7 @@ public class MonitorSitesStatusService
 
         var allSites = _liteInMemorySiteStorage.GetAll();
         var allRegions = _inMemoryRegionStorage.GetAll();
-        if (IsValidForProcessing(allSites, allRegions))
+        if (!IsValidForProcessing(allSites, allRegions))
         {
             timer.Stop();
             return (int)timer.Elapsed.TotalSeconds;
