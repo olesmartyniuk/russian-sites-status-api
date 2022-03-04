@@ -43,6 +43,7 @@ public class DatabaseStorage
     {
         return await _db.Sites
             .Include(s => s.Checks)
+            .ThenInclude(c => c.Region)
             .AsNoTracking()
             .ToListAsync();
     }
