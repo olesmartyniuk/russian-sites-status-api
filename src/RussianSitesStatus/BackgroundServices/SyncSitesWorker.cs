@@ -6,27 +6,31 @@ namespace RussianSitesStatus.BackgroundServices;
 
 public class SyncSitesWorker : BackgroundService
 {
-    private readonly SyncSitesConfiguration _syncSitesConfiguration;
-
     private readonly IServiceScopeFactory _serviceFactory;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<SyncSitesWorker> _logger;
     public SyncSitesWorker(
         ILogger<SyncSitesWorker> logger,
-        IServiceProvider serviceProvider,
-        IServiceScopeFactory serviceFactory)
+        IServiceScopeFactory serviceFactory,
+        IConfiguration configuration)
     {
         _logger = logger;
-        _syncSitesConfiguration = serviceProvider
-            .GetRequiredService<IOptions<SyncSitesConfiguration>>().Value;
         _serviceFactory = serviceFactory;
+        _configuration = configuration;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var sitesSyncInterval = int.Parse(_configuration["SITES_SYNC_INTERVAL"]);
+        if (sitesSyncInterval <= 0)
+        {
+            return;
+        }
+
         using var serviceScope = _serviceFactory.CreateScope();
         var syncSitesService = serviceScope.ServiceProvider.GetRequiredService<ISyncSitesService>();
 
-        await Task.Delay(TimeSpan.FromSeconds(_syncSitesConfiguration.WaitBeforeFirstIterationSeconds), stoppingToken);
+        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -39,7 +43,7 @@ public class SyncSitesWorker : BackgroundService
                 _logger.LogError(e, "Unhandled exception while fetching statuses");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(_syncSitesConfiguration.WaitToNextCheckSeconds), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(sitesSyncInterval), stoppingToken);
         }
     }
 }

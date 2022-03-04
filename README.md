@@ -40,3 +40,15 @@ info: Microsoft.Hosting.Lifetime[14]
 ## Додавання нових задач
 
 Ви можете запропонувати новий функціонал чи прозвітувати про баг [на сторінці Issues](https://github.com/olesmartyniuk/russian-sites-status-api/issues).
+
+## Оточення
+
+### Тестове оточення
+* UI: https://dev-russian-sites-status-ui.herokuapp.com/
+* API: https://dev-russian-sites-status-api.herokuapp.com/
+* Logs: https://app.logdna.com/c36bd7d1ad/logs/view
+
+
+### Продакш оточення 
+* UI: https://www.mordor-sites-status.info/
+* API: https://api.mordor-sites-status.info/
