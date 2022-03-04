@@ -13,6 +13,7 @@ public class Check : Entity
     public DateTime CheckedAt { get; set; }
     public long RegionId { get; set; }
     public Region Region { get; set; }
+    public Guid Iteration { get; set; }
 }
 
 public enum CheckStatus
@@ -52,5 +53,8 @@ public class CheckConfiguration : IEntityTypeConfiguration<Check>
             .HasForeignKey(r => r.SiteId);
         builder
             .HasOne(c => c.Region);
+        builder
+            .Property(p => p.Iteration)
+            .IsRequired();
     }
 }
