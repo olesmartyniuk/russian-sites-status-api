@@ -27,7 +27,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://russian-sites-status-api.herokuapp.com/api/sites
+    ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites
     ///
     /// </remarks>    
     /// <returns>List of sites</returns>
@@ -49,7 +49,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://russian-sites-status-api.herokuapp.com/api/sites/2876347
+    ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites/2876347
     ///
     /// </remarks>    
     /// <param name="id">Site id, integer number</param>
@@ -76,7 +76,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://russian-sites-status-api.herokuapp.com/api/sites/search?text=ya.ru
+    ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites/search?text=ya.ru
     ///
     /// </remarks>    
     /// <param name="text">Text, minimum 3 symbols</param>
@@ -102,7 +102,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    POST https://russian-sites-status-api.herokuapp.com/api/sites/ya.ru
+    ///    POST https://dev-russian-sites-status-api.herokuapp.com/api/sites/ya.ru
     ///
     /// </remarks>    
     /// <param name="siteUrl">Site URL to monitor</param>
@@ -147,7 +147,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    DELETE https://russian-sites-status-api.herokuapp.com/api/sites/82197
+    ///    DELETE https://dev-russian-sites-status-api.herokuapp.com/api/sites/82197
     ///
     /// </remarks>    
     /// <param name="siteId">Site Id to remove</param>
