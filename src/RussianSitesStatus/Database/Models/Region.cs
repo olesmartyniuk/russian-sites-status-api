@@ -25,5 +25,9 @@ public class RegionConfiguration : IEntityTypeConfiguration<Region>
         builder
             .Property(p => p.ProxyUrl)
             .IsRequired();
+        builder
+            .Property(p => p.ProxyUser);
+        builder
+            .Property(p => p.ProxyPassword);
     }
 }
