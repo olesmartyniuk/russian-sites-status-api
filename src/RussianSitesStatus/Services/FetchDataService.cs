@@ -6,26 +6,29 @@ namespace RussianSitesStatus.Services
 {
     public class FetchDataService : IFetchDataService
     {
-        private DatabaseStorage _databaseStorage;
+        private IServiceScopeFactory _serviceScopeFactory;
         public FetchDataService(IServiceScopeFactory serviceScopeFactory)
         {
-            using (var serviceScope = serviceScopeFactory.CreateScope())
-            {
-                _databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
-            }
+            _serviceScopeFactory = serviceScopeFactory;
         }
+
 
         public async Task<IEnumerable<SiteDetailsVM>> GetAllSitesDetailsAsync()
         {
-            var siteDetailsVMList = new List<SiteDetailsVM>();
-            var sitesDB = await _databaseStorage.GetAllSites();
-
-            foreach (var siteDbItem in sitesDB)
+            using (var serviceScope = _serviceScopeFactory.CreateScope())
             {
-                siteDetailsVMList.Add(GetSiteDetailsVM(siteDbItem));
-            }
+                var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
-            return siteDetailsVMList;
+                var siteDetailsVMList = new List<SiteDetailsVM>();
+                var sitesDB = await databaseStorage.GetAllSites();
+
+                foreach (var siteDbItem in sitesDB)
+                {
+                    siteDetailsVMList.Add(GetSiteDetailsVM(siteDbItem));
+                }
+
+                return siteDetailsVMList;
+            }
         }
 
         private SiteDetailsVM GetSiteDetailsVM(Site siteDbItem)
@@ -71,8 +74,13 @@ namespace RussianSitesStatus.Services
 
         public async Task<IEnumerable<RegionVM>> GetAllRegionsAsync()
         {
-            var regions = await _databaseStorage.GetAllRegions();
-            return regions.Select(region => new RegionVM { Id = region.Id, Name = region.Name, ProxyUrl = region.ProxyUrl, ProxyUser = region.ProxyUser, ProxyPassword = region.ProxyPassword}); //TODOVK: use automapper
+            using (var serviceScope = _serviceScopeFactory.CreateScope())
+            {
+                var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+
+                var regions = await databaseStorage.GetAllRegions();
+                return regions.Select(region => new RegionVM { Id = region.Id, Name = region.Name, ProxyUrl = region.ProxyUrl, ProxyUser = region.ProxyUser, ProxyPassword = region.ProxyPassword }); //TODOVK: use automapper
+            }
         }
     }
 }
