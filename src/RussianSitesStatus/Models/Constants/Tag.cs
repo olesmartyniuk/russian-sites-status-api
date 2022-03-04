@@ -1,4 +1,4 @@
-﻿namespace RussianSitesStatus.Models.Constants.StatusCake;
+﻿namespace RussianSitesStatus.Models.Constants;
 
 public static class Tag
 {

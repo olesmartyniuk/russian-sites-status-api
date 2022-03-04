@@ -1,8 +1,8 @@
 namespace RussianSitesStatus.Models;
 
-public class SiteVM
+public class Site
 {
-    public string Id { get; set; } //TODO: Why string?
+    public string Id { get; set; }
     public string Name { get; set; }
     public string TestType { get; set; }
     public string WebsiteUrl { get; set; }
@@ -17,14 +17,14 @@ public class SiteVM
     }
 }
 
-public class SiteDetailsVM : SiteVM
+public class SiteDetails : Site
 {
-    public List<ServerDto> Servers { get; set; }
+    public List<Server> Servers { get; set; }
     public int Timeout { get; set; }
     public DateTime LastTestedAt { get; set; }
 }
 
-public class ServerDto
+public class Server
 {    
     public string Region { get; set; }
     public string RegionCode { get; set; }

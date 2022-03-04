@@ -7,21 +7,16 @@ using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication;
 using RussianSitesStatus.Auth;
-using RussianSitesStatus.Database;
-using Microsoft.EntityFrameworkCore;
-using RussianSitesStatus.Services.StatusCake;
-using RussianSitesStatus.Database.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-AddServices(builder);
+AddService(builder.Services);
 AddControllers(builder);
-AddSwagger(builder);
+AddSwagger(builder.Services);
 AddAuthentication(builder);
-AddCors(builder);
+AddCors(builder.Services);
 
 builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
-builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
 
 builder.WebHost.UseKestrel((context, options) =>
 {
@@ -46,75 +41,26 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-
-CreateDbIfNotExist(app);
-
 app.Run();
 
 
-static void CreateDbIfNotExist(WebApplication app)
+static void AddService(IServiceCollection services)
 {
-    using var scope = app.Services.CreateScope();
-    var services = scope.ServiceProvider;
-
-    try
-    {
-        var context = services.GetRequiredService<ApplicationContext>();
-        var logger = services.GetRequiredService<ILogger<Program>>();
-
-        var migrations = context.Database.GetPendingMigrations().ToList();
-        if (migrations.Any())
-        {
-            logger.LogInformation("Service is going to run migrations: {migrations}.", string.Join(", ", migrations));
-        }
-        else
-        {
-            logger.LogInformation("There are no pending migrations");
-        }
-        context.Database.Migrate();
-        logger.LogInformation("The database has been successfully migrated.");
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating the DB.");
-    }
-}
-
-
-static void AddServices(WebApplicationBuilder builder)
-{
-    var services = builder.Services;
-
-    services.AddDbContext<ApplicationContext>(options =>
-    {
-        options.UseNpgsql(builder.Configuration.GetConnectionString());
-    });
-
     services.AddSingleton<StatusCakeService>();
-    services.AddSingleton<InMemoryStorage<SiteVM>>();
-    services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
-    services.AddSingleton<BaseInMemoryStorage<RegionVM>>();
+    services.AddSingleton<Storage<Site>>();
+    services.AddSingleton<Storage<SiteDetails>>();
 
-    services.AddSingleton<StatusCakeUpCheckService>();
-    services.AddSingleton<ISyncSitesService, SyncStatusCakeSitesService>();
-
+    services.AddSingleton<UpCheckService>();
+    services.AddSingleton<SyncSitesService>();
     services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
 
-    services.AddScoped<DatabaseStorage>();
-
-    services.AddSingleton<IFetchDataService, FetchDataService>();
-    services.AddSingleton<MonitorSitesStatusService>();
-    services.AddSingleton<ICheckSiteService, CheckSiteService>();
-
-    services.AddHostedService<MemoryDataFetcher>();
-    services.AddHostedService<SyncSitesWorker>();
-    services.AddHostedService<MonitorStatusWorker>();
+    services.AddHostedService<StatusFetcherBackgroundService>();
+    services.AddHostedService<SyncSitesBackgroundService>();
 }
 
-static void AddCors(WebApplicationBuilder builder)
+static void AddCors(IServiceCollection services)
 {
-    builder.Services.AddCors(options =>
+    services.AddCors(options =>
     {
         options.AddPolicy("CorsPolicy",
             builder => builder
@@ -124,9 +70,9 @@ static void AddCors(WebApplicationBuilder builder)
     });
 }
 
-static void AddSwagger(WebApplicationBuilder builder)
+static void AddSwagger(IServiceCollection services)
 {
-    builder.Services.AddSwaggerGen(c =>
+    services.AddSwaggerGen(c =>
     {
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);

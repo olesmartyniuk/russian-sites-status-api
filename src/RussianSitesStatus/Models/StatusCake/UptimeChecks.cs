@@ -1,4 +1,4 @@
-namespace RussianSitesStatus.Models.StatusCake;
+namespace RussianSitesStatus.Models;
 public class UptimeChecksItem
 {
     public string id { get; set; }
