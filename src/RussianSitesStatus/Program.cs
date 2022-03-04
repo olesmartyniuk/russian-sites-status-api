@@ -88,7 +88,12 @@ static void AddServices(WebApplicationBuilder builder)
 
     services.AddDbContext<ApplicationContext>(options =>
     {
-        options.UseNpgsql(builder.Configuration.GetConnectionString());
+        options.UseNpgsql(builder.Configuration.GetConnectionString(),
+                optionsAction =>
+                {
+                    optionsAction.EnableRetryOnFailure(2, TimeSpan.FromSeconds(5), null);
+                }
+            );
     }, ServiceLifetime.Transient);
 
     services.AddSingleton<StatusCakeService>();

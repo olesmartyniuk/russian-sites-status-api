@@ -42,8 +42,8 @@ public class MonitorSitesStatusService
         var timer = new Stopwatch();
         timer.Start();
 
-        var allSites = new List<SiteVM>(_liteInMemorySiteStorage.GetAll().Take(10));
-        var allRegions = new List<RegionVM>(_inMemoryRegionStorage.GetAll().Take(3)); ;
+        var allSites = _liteInMemorySiteStorage.GetAll(10);
+        var allRegions = _inMemoryRegionStorage.GetAll().Take(3);
         if (!allSites.Any() || !allRegions.Any())
         {
             _logger.LogWarning($"There is nothing to monitor. Regions number = {allRegions.Count()}, Sites number = {allSites.Count()}");
