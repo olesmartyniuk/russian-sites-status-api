@@ -12,29 +12,27 @@ public class MonitorSitesStatusService
     private static int ITERATION_NUMBER = 10;
     private readonly int _rateInMilliseconds;
 
-    private ConcurrentBag<Check> Checks = new ConcurrentBag<Check>();
-
     private readonly InMemoryStorage<SiteVM> _liteInMemorySiteStorage;
     private readonly BaseInMemoryStorage<RegionVM> _inMemoryRegionStorage;
     private readonly ICheckSiteService _checkSiteService;
     private readonly ILogger<MonitorSitesStatusService> _logger;
-    private readonly DatabaseStorage _databaseStorage;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public MonitorSitesStatusService(
         BaseInMemoryStorage<RegionVM> inMemoryRegionStorage,
         InMemoryStorage<SiteVM> liteInMemorySiteStorage,
         ICheckSiteService checkSiteService,
+        IServiceScopeFactory serviceScopeFactory,
         IOptions<MonitorSitesConfiguration> configurations,
-        ILogger<MonitorSitesStatusService> logger
-        , DatabaseStorage databaseStorage)
+        ILogger<MonitorSitesStatusService> logger)
     {
 
         _liteInMemorySiteStorage = liteInMemorySiteStorage;
         _checkSiteService = checkSiteService;
         _inMemoryRegionStorage = inMemoryRegionStorage;
+        _serviceScopeFactory = serviceScopeFactory;
         _rateInMilliseconds = (int)TimeSpan.FromSeconds(configurations.Value.Rate).TotalMilliseconds;
         _logger = logger;
-        _databaseStorage = databaseStorage;
     }
 
     public async Task<int> MonitorAllAsync()
@@ -42,8 +40,8 @@ public class MonitorSitesStatusService
         var timer = new Stopwatch();
         timer.Start();
 
-        var allSites = _liteInMemorySiteStorage.GetAll().Take(10);
-        var allRegions = _inMemoryRegionStorage.GetAll().Take(3);
+        var allSites = _liteInMemorySiteStorage.GetAll();
+        var allRegions = _inMemoryRegionStorage.GetAll();
         if (!allSites.Any() || !allRegions.Any())
         {
             _logger.LogWarning($"There is nothing to monitor. Regions number = {allRegions.Count()}, Sites number = {allSites.Count()}");
@@ -54,10 +52,7 @@ public class MonitorSitesStatusService
         var taskList = new List<Task>();
         foreach (var batch in allSites.Chunk(allSites.Count() / ITERATION_NUMBER))
         {
-            foreach (var item in batch)
-            {
-                taskList.Add(Task.Run(() => CheckOneSiteOnAllRegionsAsync(item, allRegions, Checks)));
-            }
+            taskList.Add(Task.Run(async () => await CheckSitesOnAllRegionsAsync(batch, allRegions)));
 
             //await Task.Delay(_rateInMilliseconds / ITERATION_NUMBER);
             //await Task.Delay(100);
@@ -66,10 +61,25 @@ public class MonitorSitesStatusService
         await Task.WhenAll(taskList);
 
         timer.Stop();
-
-        await _databaseStorage.AddChecks(Checks.ToList());
-
         return (int)timer.Elapsed.TotalSeconds;
+    }
+
+
+    private async Task CheckSitesOnAllRegionsAsync(IEnumerable<SiteVM> sites, IEnumerable<RegionVM> allRegions)
+    {
+        var checks = new ConcurrentBag<Check>();
+        var taskList = new List<Task>();
+        using (var serviceScope = _serviceScopeFactory.CreateScope())
+        {
+            var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+            foreach (var item in sites)
+            {
+                taskList.Add(Task.Run(async () => await CheckOneSiteOnAllRegionsAsync(item, allRegions, checks)));
+            }
+
+            await Task.WhenAll(taskList);
+            await databaseStorage.AddChecksAsync(checks.ToList());
+        }
     }
 
     private async Task CheckOneSiteOnAllRegionsAsync(SiteVM site, IEnumerable<RegionVM> allRegions, ConcurrentBag<Check> checks)
