@@ -1,31 +1,32 @@
-using Microsoft.Extensions.Options;
-using RussianSitesStatus.Configuration;
 using RussianSitesStatus.Services;
 
 namespace RussianSitesStatus.BackgroundServices;
 
 public class MonitorStatusWorker : BackgroundService
 {
-    private readonly MonitorSitesConfiguration _monitorSitesConfiguration;
-
     private readonly ILogger<MonitorStatusWorker> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private IConfiguration _configuration;
 
     public MonitorStatusWorker(
         ILogger<MonitorStatusWorker> logger,
-        IServiceProvider serviceProvider,
-        IServiceScopeFactory serviceScopeFactory)
+        IServiceScopeFactory serviceScopeFactory, 
+        IConfiguration configuration)
     {
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
-        _monitorSitesConfiguration = serviceProvider
-            .GetRequiredService<IOptions<MonitorSitesConfiguration>>().Value;
+        _configuration = configuration;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var siteCheckInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
+        if (siteCheckInterval <= 0)
+        {
+            return;
+        }
 
-        await Task.Delay(TimeSpan.FromSeconds(_monitorSitesConfiguration.WaitBeforeFirstIterationSeconds), stoppingToken);
+        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
 
         var spentTime = 0;
         while (!stoppingToken.IsCancellationRequested)
@@ -44,7 +45,7 @@ public class MonitorStatusWorker : BackgroundService
                 _logger.LogError(e, "Unhandled exception while fetching statuses");
             }
 
-            var waitToNextIteration = _monitorSitesConfiguration.WaitToNextCheckSeconds - spentTime;
+            var waitToNextIteration = siteCheckInterval - spentTime;
             if (waitToNextIteration > 0)
             {
                 await Task.Delay(TimeSpan.FromSeconds(waitToNextIteration), stoppingToken);
@@ -52,7 +53,7 @@ public class MonitorStatusWorker : BackgroundService
             }
             else
             {
-                _logger.LogWarning($"Monitoring takes: {spentTime} seconds. It's more than one iteration({_monitorSitesConfiguration.WaitToNextCheckSeconds } seconds) should be.");
+                _logger.LogWarning($"Monitoring takes: {spentTime} seconds. It's more than one iteration({ siteCheckInterval } seconds) should be.");
             }
         }
     }

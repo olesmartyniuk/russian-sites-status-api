@@ -7,20 +7,20 @@ namespace RussianSitesStatus.BackgroundServices;
 
 public class MemoryDataFetcher : BackgroundService
 {
-    private const int WAIT_TO_NEXT_CHECK_SECONDS = 30;
-
     private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
     private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
     private readonly BaseInMemoryStorage<RegionVM> _regionStorage;
     private readonly ILogger<MemoryDataFetcher> _logger;
     private readonly IFetchDataService _fetchDataService;
+    private IConfiguration _configuration;
 
     public MemoryDataFetcher(
         InMemoryStorage<SiteVM> liteStatusStorage,
         InMemoryStorage<SiteDetailsVM> fullStatusStorage,
         BaseInMemoryStorage<RegionVM> regionStorage,
         ILogger<MemoryDataFetcher> logger,
-        IFetchDataService dataService
+        IFetchDataService dataService,
+        IConfiguration configuration
        )
     {
         _liteStatusStorage = liteStatusStorage;
@@ -28,10 +28,17 @@ public class MemoryDataFetcher : BackgroundService
         _logger = logger;
         _fetchDataService = dataService;
         _regionStorage = regionStorage;
+        _configuration = configuration;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var siteCheckInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
+        if (siteCheckInterval <= 0)
+        {
+            return;
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -43,7 +50,7 @@ public class MemoryDataFetcher : BackgroundService
                 _logger.LogError(e, "Unhandled exception while fetching statuses");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(WAIT_TO_NEXT_CHECK_SECONDS), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(siteCheckInterval), stoppingToken);
         }
     }
 
