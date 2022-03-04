@@ -72,7 +72,7 @@ namespace RussianSitesStatus.Services
         public async Task<IEnumerable<RegionVM>> GetAllRegionsAsync()
         {
             var regions = await _databaseStorage.GetAllRegions();
-            return regions.Select(region => new RegionVM { Id = region.Id, Name = region.Name, ProxyUrl = region.ProxyUrl }); //TODOVK: use automapper
+            return regions.Select(region => new RegionVM { Id = region.Id, Name = region.Name, ProxyUrl = region.ProxyUrl, ProxyUser = region.ProxyUser, ProxyPassword = region.ProxyPassword}); //TODOVK: use automapper
         }
     }
 }
