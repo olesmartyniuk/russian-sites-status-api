@@ -8,16 +8,16 @@ using System.Net;
 namespace RussianSitesStatus.Services;
 public class CheckSiteService : ICheckSiteService
 {
-    private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30); 
-    private readonly DatabaseStorage _databaseStorage;
+    private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
     private readonly ILogger<CheckSiteService> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
     private static readonly ConcurrentDictionary<string, HttpClient> HttpClientsByRegion = new();
 
     public CheckSiteService(IServiceScopeFactory serviceScopeFactory, ILogger<CheckSiteService> logger)
     {
         _logger = logger;
-        using var serviceScope = serviceScopeFactory.CreateScope();
-        _databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     private HttpClient CreateHttpClient(RegionVM region)
@@ -61,9 +61,9 @@ public class CheckSiteService : ICheckSiteService
             timer.Stop();
             var statusCode = response is null ? -1 : (int)response.StatusCode;
             await SaveCheckAsync(statusCode, site, region, timer.Elapsed.Seconds);
-        }   
+        }
     }
-    
+
     public async Task SaveCheckAsync(int statusCode, SiteVM site, RegionVM region, int spentTime)
     {
         var check = new Check
@@ -75,6 +75,11 @@ public class CheckSiteService : ICheckSiteService
             RegionId = region.Id
         };
 
-        await _databaseStorage.AddCheck(check);
+        using (var serviceScope = _serviceScopeFactory.CreateScope())
+        {
+            var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+
+            await databaseStorage.AddCheck(check);
+        }
     }
 }
