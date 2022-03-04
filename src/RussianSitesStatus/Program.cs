@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi.Models;
 using RussianSitesStatus.Auth;
 using RussianSitesStatus.BackgroundServices;
@@ -68,10 +69,10 @@ static void CreateDbIfNotExist(WebApplication app)
         }
         else
         {
-            logger.LogInformation("There are no pending migrations");
+            logger.LogTrace("There are no pending migrations");
         }
         context.Database.Migrate();
-        logger.LogInformation("The database has been successfully migrated.");
+        logger.LogTrace("The database has been successfully migrated.");
     }
     catch (Exception ex)
     {
@@ -87,6 +88,13 @@ static void AddServices(WebApplicationBuilder builder)
 
     services.AddDbContext<ApplicationContext>(options =>
     {
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.CommandExecuting, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.CommandExecuted, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.ConnectionOpening, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.ConnectionOpened, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.ConnectionClosing, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.ConnectionClosed, LogLevel.Trace)));
+
         options.UseNpgsql(builder.Configuration.GetConnectionString(),
                 optionsAction =>
                 {
