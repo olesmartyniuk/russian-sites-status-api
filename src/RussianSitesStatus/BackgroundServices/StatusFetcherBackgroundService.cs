@@ -51,31 +51,38 @@ public class StatusFetcherBackgroundService : BackgroundService
         {
             foreach (var status in batch)
             {
-                var uptimeCheck = await _statusCakeService.GetStatus(status.Id);
-                var history = await GetHistory(status);
-
-                var data = uptimeCheck.data;
-                var siteStatus = new SiteDetails
+                try
                 {
-                    Id = data.id,
-                    Name = data.name.NormalizeSiteName(),
-                    Status = data.status,
-                    TestType = data.test_type,
-                    Uptime = data.uptime,
-                    WebsiteUrl = data.website_url,                    
-                    LastTestedAt = data.last_tested_at,                    
-                    Servers = data.servers.Select(s => new Server
-                    {
-                        Region = s.region,
-                        RegionCode = s.region_code,
-                        Status = GetStatusByRegion(history, s.region_code),
-                        StatusCode = GetStatusCodeByRegion(history, s.region_code),
-                        LastTestedAt = GetLastTestedAtByRegion(history, s.region_code)
-                    }).ToList(),
-                    Timeout = data.timeout
-                };
+                    var uptimeCheck = await _statusCakeService.GetStatus(status.Id);
+                    var history = await GetHistory(status);
 
-                _fullStatusStorage.Replace(siteStatus);                
+                    var data = uptimeCheck.data;
+                    var siteStatus = new SiteDetails
+                    {
+                        Id = data.id,
+                        Name = data.name.NormalizeSiteName(),
+                        Status = data.status,
+                        TestType = data.test_type,
+                        Uptime = data.uptime,
+                        WebsiteUrl = data.website_url,
+                        LastTestedAt = data.last_tested_at,
+                        Servers = data.servers.Select(s => new Server
+                        {
+                            Region = s.region,
+                            RegionCode = s.region_code,
+                            Status = GetStatusByRegion(history, s.region_code),
+                            StatusCode = GetStatusCodeByRegion(history, s.region_code),
+                            LastTestedAt = GetLastTestedAtByRegion(history, s.region_code)
+                        }).ToList(),
+                        Timeout = data.timeout
+                    };
+
+                    _fullStatusStorage.Replace(siteStatus);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Unhandled exception while fetching statuses");
+                }
             }
 
             await Task.Delay(ONE_SECOND); // Sleep to avoid 429
@@ -139,39 +146,39 @@ public class StatusFetcherBackgroundService : BackgroundService
 
     private string GetRegionByLocation(string location)
     {
-    return location.ToUpper() switch
+        return location.ToUpper() switch
         {
             "RU3" => "novosibirsk",
-           
+
             "SG1" => "singapore",
             "SG2" => "singapore",
-            
+
             "SWE1" => "stockholm",
             "SE3" => "stockholm",
-                       
+
             "DEFR-1" => "frankfurt",
             "DODE6" => "frankfurt",
 
             "BR1" => "sao-paulo",
-            
+
             "JP1" => "tokyo",
             "JP5" => "tokyo",
-            
+
             "PL4" => "warsaw",
             "PL2" => "warsaw",
-            
+
             "HK" => "hong-kong",
             "HK2" => "hong-kong",
 
             "MEX" => "mexico-city",
             "MEX2" => "mexico-city",
-            
+
             "UKBOB" => "london",
             "FREE12SUB1" => "london",
-            
+
             "TORO3" => "toronto",
             "CATOR" => "toronto",
-            
+
             "AU4" => "sydney",
             "AU5" => "sydney",
 
