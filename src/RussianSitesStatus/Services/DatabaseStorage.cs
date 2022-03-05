@@ -47,7 +47,7 @@ public class DatabaseStorage
         var upTime = await connection.QueryAsync<UpTimePerSiteDto>(
             @"select ""SiteId"", count(case when g.IsUp = true then g.""SiteId"" end)/count(""SiteId"")::float as UpTime from 
                    (select ""SiteId"", ""Iteration"", bool_or(sq.IsUp) as IsUp from
-                        (select ""CheckedAt"", ""SiteId"", ""Iteration"", ""StatusCode""= 200 as IsUp FROM public.""Checks""where ""CheckedAt"" >= (now() at time zone 'utc') - INTERVAL '24 HOURS') as sq
+                        (select ""CheckedAt"", ""SiteId"", ""Iteration"", ""StatusCode"" >= 200 and ""StatusCode"" <= 300 as IsUp FROM public.""Checks""where ""CheckedAt"" >= (now() at time zone 'utc') - INTERVAL '24 HOURS') as sq
                     group by ""SiteId"", ""Iteration"") as g
                  group by ""SiteId""");
         return upTime;

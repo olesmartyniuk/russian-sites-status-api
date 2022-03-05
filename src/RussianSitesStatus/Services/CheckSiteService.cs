@@ -91,7 +91,7 @@ public class CheckSiteService : ICheckSiteService
         var status = statusCode switch
         {
             -1 => CheckStatus.Unknown,
-            200 => CheckStatus.Available,
+            >= 200 and <= 300 => CheckStatus.Available,
             _ => CheckStatus.Unavailable
         };
         return status;
