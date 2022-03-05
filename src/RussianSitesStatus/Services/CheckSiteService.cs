@@ -80,9 +80,20 @@ public class CheckSiteService : ICheckSiteService
             StatusCode = statusCode,
             SpentTime = spentTime,
             RegionId = region.Id,
-            Iteration = iteration
+            Iteration = iteration,
+            Status = GetStatus(statusCode)
         };
-
         return check;
+    }
+    
+    private CheckStatus GetStatus(int statusCode)
+    {
+        var status = statusCode switch
+        {
+            -1 => CheckStatus.Unknown,
+            200 => CheckStatus.Available,
+            _ => CheckStatus.Unavailable
+        };
+        return status;
     }
 }
