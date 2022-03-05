@@ -1,6 +1,6 @@
 ﻿using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Models;
-using RussianSitesStatus.Models.Dtos;
+using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Services.Contracts;
 
 namespace RussianSitesStatus.Services
@@ -34,27 +34,23 @@ namespace RussianSitesStatus.Services
             }
         }
 
-        private string GetSiteStatus(long siteId, IReadOnlyDictionary<long, SiteStatus> statusPerSite)
+        public string GetSiteStatus(CheckStatus checkStatus)
         {
-            if (statusPerSite.TryGetValue(siteId, out var siteStatus))
+            var result = checkStatus switch
             {
-                var result = siteStatus switch
-                {
-                    SiteStatus.Down => "Down",
-                    SiteStatus.Up => "Up",
-                    SiteStatus.FailToIdentify => "Unknown",
-                    _ => throw new ArgumentOutOfRangeException(nameof(siteStatus), $"Not expected site status value: {siteStatus}"),
-                };
-                return result;
-            }
-            return "Unknown";
+                CheckStatus.Available => SiteStatus.Up,
+                CheckStatus.Unavailable => SiteStatus.Down,
+                CheckStatus.Unknown => SiteStatus.Unknown,
+                _ => throw new ArgumentOutOfRangeException(nameof(checkStatus), $"Not expected site status value: {checkStatus}"),
+            };
+            return result;
         }
 
-        private SiteDetailsVM GetSiteDetailsVM(Site siteDbItem, IReadOnlyDictionary<long, float> uptimePerSite, IReadOnlyDictionary<long, SiteStatus> statusPerSite)
+        private SiteDetailsVM GetSiteDetailsVM(Site siteDbItem, IReadOnlyDictionary<long, float> uptimePerSite, IReadOnlyDictionary<long, CheckStatus> statusPerSite)
         {
             var lastItem = siteDbItem.Checks.OrderBy(check => check.CheckedAt).LastOrDefault();
 
-            var status = GetSiteStatus(siteDbItem.Id, statusPerSite);
+            var status =  statusPerSite.TryGetValue(siteDbItem.Id, out var siteStatus) ? GetSiteStatus(siteStatus) : SiteStatus.Unknown;
             var uptime = uptimePerSite.TryGetValue(siteDbItem.Id, out var result1) ? (float?)result1 * 100 : null;
             return new SiteDetailsVM
             {
@@ -70,17 +66,16 @@ namespace RussianSitesStatus.Services
             };
         }
 
-        private List<ServerDto> GetServers(ICollection<Check> Checks)
+        private List<ServerDto> GetServers(ICollection<Check> checks)
         {
             var servers = new List<ServerDto>();
-
-            var lastCheck = Checks.OrderBy(check => check.CheckedAt).LastOrDefault();
-            foreach (var check in Checks)
+            var lastCheck = checks.OrderBy(check => check.CheckedAt).LastOrDefault();
+            foreach (var check in checks)
                 servers.Add(new ServerDto
                 {
                     Region = check.Region.Name,
                     RegionCode = check.Region.Name,
-                    Status = lastCheck.Status.ToString(),
+                    Status = GetSiteStatus(lastCheck!.Status),
                     StatusCode = lastCheck.StatusCode,
                     LastTestedAt = lastCheck.CheckedAt,
                 });
