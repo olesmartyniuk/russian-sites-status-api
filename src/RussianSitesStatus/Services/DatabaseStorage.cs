@@ -55,7 +55,7 @@ public class DatabaseStorage
 
     public async Task<IEnumerable<Site>> GetAllSites()
     {
-       return await _db.Sites
+        return await _db.Sites
             .AsNoTracking()
             .ToListAsync();
     }
@@ -64,17 +64,11 @@ public class DatabaseStorage
     {
         var connection = _db.Database.GetDbConnection();
         var statuses = await connection.QueryAsync<StatusPerSiteDto>(
-            @"select ""SiteId"", max(ch.Status) as Status from
-                    (select ""CheckedAt"", ""SiteId"", ""Iteration"", 
-                            (case
-                                when ""StatusCode""= -1 or ""RegionId"" = 1 then 2
-                                when ""StatusCode""= 200 and ""RegionId"" = 1 then 2
-                                when ""StatusCode""= 200 then 1
-                                else 0
-                             end) as Status
-                   from public.""Checks"" where ""Iteration"" = 
-                                                (select ""Iteration"" FROM public.""Checks"" order by ""CheckedAt"" limit 1)) as ch
-               group by ""SiteId"", ""Iteration""");
+            @"select ""SiteId"", min(sq.""Status"")
+                 from (select ""CheckedAt"", ""SiteId"", ""Iteration"", ""Status""
+                       from public.""Checks"" where ""Iteration"" = 
+                                                    (select ""Iteration"" FROM public.""Checks"" order by ""CheckedAt"" limit 1)) as sq
+                 group by ""SiteId"", ""Iteration""");
         return statuses;
     }
 

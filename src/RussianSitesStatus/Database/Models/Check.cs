@@ -19,7 +19,8 @@ public class Check : Entity
 public enum CheckStatus
 {
     Available = 1,
-    Unavailable = 2
+    Unknown = 2,
+    Unavailable = 3
 }
 
 public class CheckConfiguration : IEntityTypeConfiguration<Check>
