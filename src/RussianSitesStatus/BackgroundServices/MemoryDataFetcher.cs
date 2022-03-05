@@ -1,4 +1,3 @@
-using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Services;
 using RussianSitesStatus.Services.Contracts;
