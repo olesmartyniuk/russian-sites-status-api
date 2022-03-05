@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dapper;
+using Microsoft.EntityFrameworkCore;
 using RussianSitesStatus.Database;
 using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Extensions;
+using RussianSitesStatus.Models.Dtos;
 
 namespace RussianSitesStatus.Services;
 
@@ -39,13 +41,41 @@ public class DatabaseStorage
             .SingleOrDefaultAsync();
     }
 
+    public async Task<IEnumerable<UpTimePerSiteDto>> GetAllUptime()
+    {
+        var connection = _db.Database.GetDbConnection();
+        var upTime = await connection.QueryAsync<UpTimePerSiteDto>(
+            @"select ""SiteId"", count(case when g.IsUp = true then g.""SiteId"" end)/count(""SiteId"")::float as UpTime from 
+                   (select ""SiteId"", ""Iteration"", bool_or(sq.IsUp) as IsUp from
+                        (select ""CheckedAt"", ""SiteId"", ""Iteration"", ""StatusCode""= 200 as IsUp FROM public.""Checks""where ""CheckedAt"" >= (now() at time zone 'utc') - INTERVAL '24 HOURS') as sq
+                    group by ""SiteId"", ""Iteration"") as g
+                 group by ""SiteId""");
+        return upTime;
+    }
+
     public async Task<IEnumerable<Site>> GetAllSites()
     {
-        return await _db.Sites
-            .Include(s => s.Checks)
-            .ThenInclude(c => c.Region)
+       return await _db.Sites
             .AsNoTracking()
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<StatusPerSiteDto>> GetAllStatuses()
+    {
+        var connection = _db.Database.GetDbConnection();
+        var statuses = await connection.QueryAsync<StatusPerSiteDto>(
+            @"select ""SiteId"", max(ch.Status) as Status from
+                    (select ""CheckedAt"", ""SiteId"", ""Iteration"", 
+                            (case
+                                when ""StatusCode""= -1 or ""RegionId"" = 1 then 2
+                                when ""StatusCode""= 200 and ""RegionId"" = 1 then 2
+                                when ""StatusCode""= 200 then 1
+                                else 0
+                             end) as Status
+                   from public.""Checks"" where ""Iteration"" = 
+                                                (select ""Iteration"" FROM public.""Checks"" order by ""CheckedAt"" limit 1)) as ch
+               group by ""SiteId"", ""Iteration""");
+        return statuses;
     }
 
     public async Task<IEnumerable<Site>> GetAllSitesWithChecks()
