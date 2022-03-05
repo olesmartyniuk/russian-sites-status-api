@@ -1,14 +1,9 @@
-namespace RussianSitesStatus.Models.Dtos;
+using RussianSitesStatus.Database.Models;
 
-public enum SiteStatus
-{
-    Down = 0,
-    Up = 1,
-    FailToIdentify = 2,
-}
+namespace RussianSitesStatus.Models.Dtos;
 
 public class StatusPerSiteDto
 {
     public long SiteId { get; set; }
-    public SiteStatus Status { get; set; }
+    public CheckStatus Status { get; set; }
 }
