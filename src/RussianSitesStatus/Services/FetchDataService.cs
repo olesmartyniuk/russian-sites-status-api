@@ -1,5 +1,6 @@
 ﻿using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Models;
+using RussianSitesStatus.Models.Dtos;
 using RussianSitesStatus.Services.Contracts;
 
 namespace RussianSitesStatus.Services
@@ -21,33 +22,48 @@ namespace RussianSitesStatus.Services
 
                 var siteDetailsVMList = new List<SiteDetailsVM>();
                 var sitesDB = await databaseStorage.GetAllSites();
+                var statuses = (await databaseStorage.GetAllStatuses()).ToDictionary(x => x.SiteId, y => y.Status);
+                var uptime = (await databaseStorage.GetAllUptime()).ToDictionary(x => x.SiteId, y => y.UpTime);
 
                 foreach (var siteDbItem in sitesDB)
                 {
-                    siteDetailsVMList.Add(GetSiteDetailsVM(siteDbItem));
+                    siteDetailsVMList.Add(GetSiteDetailsVM(siteDbItem, uptime, statuses));
                 }
 
                 return siteDetailsVMList;
             }
         }
 
-        private SiteDetailsVM GetSiteDetailsVM(Site siteDbItem)
+        private string GetSiteStatus(long siteId, IReadOnlyDictionary<long, SiteStatus> statusPerSite)
+        {
+            if (statusPerSite.TryGetValue(siteId, out var siteStatus))
+            {
+                var result = siteStatus switch
+                {
+                    SiteStatus.Down => "Down",
+                    SiteStatus.Up => "Up",
+                    SiteStatus.FailToIdentify => "Unknown",
+                    _ => throw new ArgumentOutOfRangeException(nameof(siteStatus), $"Not expected site status value: {siteStatus}"),
+                };
+                return result;
+            }
+            return "Unknown";
+        }
+
+        private SiteDetailsVM GetSiteDetailsVM(Site siteDbItem, IReadOnlyDictionary<long, float> uptimePerSite, IReadOnlyDictionary<long, SiteStatus> statusPerSite)
         {
             var lastItem = siteDbItem.Checks.OrderBy(check => check.CheckedAt).LastOrDefault();
 
-            var latsChecks = siteDbItem.Checks.Where(check => check.CheckedAt > DateTime.UtcNow.AddDays(-1)).ToList();
-            var countChecks = latsChecks.Count();
-            var countSuccess = latsChecks.Where(check => check.Status == Database.Models.CheckStatus.Available).Count();
-
+            var status = GetSiteStatus(siteDbItem.Id, statusPerSite);
+            var uptime = uptimePerSite.TryGetValue(siteDbItem.Id, out var result1) ? (float?)result1 * 100 : null;
             return new SiteDetailsVM
             {
                 Id = siteDbItem.Id.ToString(),
                 Name = siteDbItem.Name,
                 TestType = "HTTP",
                 WebsiteUrl = siteDbItem.Url,
-                Status = lastItem?.Status.ToString(),
-                Uptime = countChecks > 0 ? countSuccess * 100 / countChecks : 100,
-
+                Status = status,
+                Uptime = uptime,
                 Servers = GetServers(siteDbItem.Checks),
                 Timeout = lastItem?.SpentTime ?? 0,
                 LastTestedAt = lastItem?.CheckedAt ?? default(DateTime)
