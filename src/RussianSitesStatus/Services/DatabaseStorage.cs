@@ -64,7 +64,7 @@ public class DatabaseStorage
     {
         var connection = _db.Database.GetDbConnection();
         var statuses = await connection.QueryAsync<StatusPerSiteDto>(
-            @"select ""SiteId"", min(sq.""Status"")
+            @"select ""SiteId"", min(sq.""Status"") as Status
                  from (select ""CheckedAt"", ""SiteId"", ""Iteration"", ""Status""
                        from public.""Checks"" where ""Iteration"" = 
                                                     (select ""Iteration"" FROM public.""Checks"" order by ""CheckedAt"" limit 1)) as sq
