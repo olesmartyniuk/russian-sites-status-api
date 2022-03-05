@@ -21,7 +21,7 @@ namespace RussianSitesStatus.Services
                 var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
                 var siteDetailsVMList = new List<SiteDetailsVM>();
-                var sitesDB = await databaseStorage.GetAllSites();
+                var sitesDB = await databaseStorage.GetAllSitesWithLastChecks();
                 var statuses = (await databaseStorage.GetAllStatuses()).ToDictionary(x => x.SiteId, y => y.Status);
                 var uptime = (await databaseStorage.GetAllUptime()).ToDictionary(x => x.SiteId, y => y.UpTime);
 
@@ -74,7 +74,7 @@ namespace RussianSitesStatus.Services
                 servers.Add(new ServerDto
                 {
                     Region = check.Region.Name,
-                    RegionCode = check.Region.Name,
+                    RegionCode = check.Region.Code,
                     Status = GetSiteStatus(lastCheck!.Status),
                     StatusCode = lastCheck.StatusCode,
                     LastTestedAt = lastCheck.CheckedAt,

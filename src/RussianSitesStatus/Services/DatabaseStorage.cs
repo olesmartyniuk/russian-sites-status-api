@@ -60,6 +60,37 @@ public class DatabaseStorage
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Site>> GetAllSitesWithLastChecks()
+    {
+        var sites = await _db.Sites
+           .AsNoTracking()
+           .ToListAsync();
+
+        var query =
+            from site in sites
+            from check in _db.Checks
+                .Where(c => c.SiteId == site.Id)
+                .Include(c => c.Region)
+                .OrderByDescending(c => c.CheckedAt)
+                .Take(10) // TODO: should be equal to the number of active regions
+            select check;
+
+        var lastChecks = query.ToList();
+
+        foreach (var site in sites)
+        {
+            var checks = lastChecks
+                .Where(c => c.SiteId == site.Id)
+                .ToList();
+            foreach (var check in checks)
+            {
+                site.Checks.Add(check);
+            }
+        }
+
+        return sites;
+    }
+
     public async Task<IEnumerable<StatusPerSiteDto>> GetAllStatuses()
     {
         var connection = _db.Database.GetDbConnection();
