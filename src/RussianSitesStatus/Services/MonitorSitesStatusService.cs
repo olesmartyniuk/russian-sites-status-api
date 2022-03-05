@@ -9,7 +9,7 @@ namespace RussianSitesStatus.Services;
 public class MonitorSitesStatusService
 {
     private static int MAX_SITES_IN_QUEUE = 100;
-    
+
     private readonly InMemoryStorage<SiteVM> _liteInMemorySiteStorage;
     private readonly BaseInMemoryStorage<RegionVM> _inMemoryRegionStorage;
     private readonly ICheckSiteService _checkSiteService;
@@ -26,7 +26,7 @@ public class MonitorSitesStatusService
         _liteInMemorySiteStorage = liteInMemorySiteStorage;
         _checkSiteService = checkSiteService;
         _inMemoryRegionStorage = inMemoryRegionStorage;
-        _serviceScopeFactory = serviceScopeFactory;        
+        _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
     }
 
@@ -40,7 +40,7 @@ public class MonitorSitesStatusService
 
         var allRegions = _inMemoryRegionStorage
             .GetAll()
-            .Where(r => r.ProxyIsActive);        
+            .Where(r => r.ProxyIsActive);
 
         if (!IsValidForProcessing(allSites, allRegions))
         {
@@ -49,8 +49,12 @@ public class MonitorSitesStatusService
         }
 
         var iteration = Guid.NewGuid();
-        var tasks = allRegions
-            .Select(region => CheckSitesForRegion(region, allSites, iteration));
+
+        var tasks = new List<Task>();
+        foreach (var region in allRegions)
+        {
+            tasks.Add(Task.Run(async () => await CheckSitesForRegion(region, allSites, iteration)));
+        }
 
         await Task.WhenAll(tasks);
 
@@ -62,30 +66,40 @@ public class MonitorSitesStatusService
     {
         var checks = new ConcurrentBag<Check>();
 
-        var throttler = new SemaphoreSlim(initialCount: MAX_SITES_IN_QUEUE);
-        var tasks = sites.Select(async site =>
-        {
-            await throttler.WaitAsync();
-            try
-            {
-                var check = await _checkSiteService.CheckAsync(site, region, iteration);
-                checks.Add(check);    
-            }
-            finally
-            {
-                throttler.Release();
-            }
-        });
-        
-        await Task.WhenAll(tasks);
+        var throttler = new SemaphoreSlim(MAX_SITES_IN_QUEUE, MAX_SITES_IN_QUEUE);
 
+        var tasks = new List<Task>();
+        foreach (var site in sites)
+        {
+            var task = Task.Run(async () =>
+            {
+                Debug.WriteLine($"Task {Task.CurrentId} begins and waits for the semaphore.Number = {throttler.CurrentCount}");
+                await throttler.WaitAsync();
+                Debug.WriteLine($"Task {Task.CurrentId} enters the semaphore.Number = {throttler.CurrentCount}");
+                try
+                {
+                    //await Task.Delay(2000);
+                    var check = await _checkSiteService.CheckAsync(site, region, iteration);
+                    checks.Add(check);
+                }
+                finally
+                {
+                    var semaphoreCount = throttler.Release();
+                    Debug.WriteLine($"Task {Task.CurrentId} releases the semaphore; previous count: NumberRelease = {semaphoreCount}.NumberCurrentCount = {throttler.CurrentCount}");
+                }
+            });
+
+            tasks.Add(task);
+        }
+
+        await Task.WhenAll(tasks);
         await SaveChecks(checks);
     }
 
     private async Task SaveChecks(ConcurrentBag<Check> checks)
     {
         using var serviceScope = _serviceScopeFactory.CreateScope();
-        
+
         var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
         await databaseStorage.AddChecksAsync(checks.ToList());
