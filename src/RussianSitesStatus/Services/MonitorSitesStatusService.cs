@@ -8,26 +8,27 @@ namespace RussianSitesStatus.Services;
 
 public class MonitorSitesStatusService
 {
-    private static int MAX_SITES_IN_QUEUE = 100;
-
     private readonly InMemoryStorage<SiteVM> _liteInMemorySiteStorage;
     private readonly BaseInMemoryStorage<RegionVM> _inMemoryRegionStorage;
     private readonly ICheckSiteService _checkSiteService;
     private readonly ILogger<MonitorSitesStatusService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private IConfiguration _configuration;
 
     public MonitorSitesStatusService(
         BaseInMemoryStorage<RegionVM> inMemoryRegionStorage,
         InMemoryStorage<SiteVM> liteInMemorySiteStorage,
         ICheckSiteService checkSiteService,
         IServiceScopeFactory serviceScopeFactory,
-        ILogger<MonitorSitesStatusService> logger)
+        ILogger<MonitorSitesStatusService> logger,
+        IConfiguration configuration)
     {
         _liteInMemorySiteStorage = liteInMemorySiteStorage;
         _checkSiteService = checkSiteService;
         _inMemoryRegionStorage = inMemoryRegionStorage;
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<int> MonitorAllAsync()
@@ -66,7 +67,8 @@ public class MonitorSitesStatusService
     {
         var checks = new ConcurrentBag<Check>();
 
-        var throttler = new SemaphoreSlim(MAX_SITES_IN_QUEUE, MAX_SITES_IN_QUEUE);
+        var maxSitesInQueue = int.Parse(_configuration["MAX_SITES_IN_QUEUE"]);
+        var throttler = new SemaphoreSlim(maxSitesInQueue, maxSitesInQueue);
 
         var tasks = new List<Task>();
         foreach (var site in sites)
