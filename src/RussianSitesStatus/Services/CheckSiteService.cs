@@ -39,27 +39,32 @@ public class CheckSiteService : ICheckSiteService
     public async Task<Check> CheckAsync(SiteVM site, RegionVM region, Guid iteration)
     {
         var timer = new Stopwatch();
-        HttpResponseMessage response = null;
+        var statusCode = -1;
         Check newCheck;
 
         try
         {
             var httpClient = HttpClientsByRegion.GetOrAdd(region.ProxyUrl, CreateHttpClient(region));
             timer.Start();
-            response = await httpClient.GetAsync(site.WebsiteUrl);
+            var response = await httpClient.GetAsync(site.WebsiteUrl);
+            statusCode = (int)response.StatusCode;
+        }
+        catch (TaskCanceledException ex)
+        {
+            statusCode = 0;
+            _logger.LogError($"Proxy is not available. Proxy url: {region.ProxyUrl}, Site: {site.WebsiteUrl}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError($"Proxy is not available. Proxy url: {region.ProxyUrl}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
+            _logger.LogError($"Proxy is not available. Proxy url: {region.ProxyUrl}, Site: {site.WebsiteUrl}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Unhandled exception. Proxy url: {region.ProxyUrl}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
+            _logger.LogError($"Unhandled exception. Proxy url: {region.ProxyUrl}, Site: {site.WebsiteUrl}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
         }
         finally
         {
             timer.Stop();
-            var statusCode = response is null ? -1 : (int)response.StatusCode;
             newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds, iteration);
         }
         return newCheck;
@@ -75,9 +80,20 @@ public class CheckSiteService : ICheckSiteService
             StatusCode = statusCode,
             SpentTime = spentTime,
             RegionId = region.Id,
-            Iteration = iteration
+            Iteration = iteration,
+            Status = GetStatus(statusCode)
         };
-
         return check;
+    }
+    
+    private CheckStatus GetStatus(int statusCode)
+    {
+        var status = statusCode switch
+        {
+            -1 => CheckStatus.Unknown,
+            >= 200 and <= 300 => CheckStatus.Available,
+            _ => CheckStatus.Unavailable
+        };
+        return status;
     }
 }
