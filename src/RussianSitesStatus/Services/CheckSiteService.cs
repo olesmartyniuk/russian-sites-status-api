@@ -10,14 +10,12 @@ public class CheckSiteService : ICheckSiteService
 {
     private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
     private readonly ILogger<CheckSiteService> _logger;
-    private readonly DatabaseStorage _databaseStorage;
 
     private static readonly ConcurrentDictionary<string, HttpClient> HttpClientsByRegion = new();
 
-    public CheckSiteService(DatabaseStorage databaseStorage, ILogger<CheckSiteService> logger)
+    public CheckSiteService(ILogger<CheckSiteService> logger)
     {
         _logger = logger;
-        _databaseStorage = databaseStorage;
     }
 
     private HttpClient CreateHttpClient(RegionVM region)
@@ -38,7 +36,7 @@ public class CheckSiteService : ICheckSiteService
         return client;
     }
 
-    public async Task<Check> CheckAsync(SiteVM site, RegionVM region)
+    public async Task<Check> CheckAsync(SiteVM site, RegionVM region, Guid iteration)
     {
         var timer = new Stopwatch();
         HttpResponseMessage response = null;
@@ -62,13 +60,13 @@ public class CheckSiteService : ICheckSiteService
         {
             timer.Stop();
             var statusCode = response is null ? -1 : (int)response.StatusCode;
-            newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds);
+            newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds, iteration);
         }
         return newCheck;
 
     }
 
-    public Check BuildCheck(int statusCode, SiteVM site, RegionVM region, int spentTime)
+    public Check BuildCheck(int statusCode, SiteVM site, RegionVM region, int spentTime, Guid iteration)
     {
         var check = new Check
         {
@@ -76,7 +74,8 @@ public class CheckSiteService : ICheckSiteService
             SiteId = int.Parse(site.Id),
             StatusCode = statusCode,
             SpentTime = spentTime,
-            RegionId = region.Id
+            RegionId = region.Id,
+            Iteration = iteration
         };
 
         return check;
