@@ -26,7 +26,7 @@ public class MonitorStatusWorker : BackgroundService
             return;
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+        await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
 
         var spentTime = 0;
         while (!stoppingToken.IsCancellationRequested)
