@@ -54,11 +54,10 @@ public class MemoryDataFetcher : BackgroundService
     }
 
     private async Task RaplaceInMemoryStorage()
-    {
-        //TODOPavlo: Create a new implemantaion of IFetchDataService, register it in DI container
+    {        
         var sites = await _fetchDataService.GetAllSitesDetailsAsync();
+     
         _fullStatusStorage.ReplaceAll(sites);
-
         _liteStatusStorage.ReplaceAll(sites.Select(vm => vm as SiteVM));
 
         var regions = await _fetchDataService.GetAllRegionsAsync();
