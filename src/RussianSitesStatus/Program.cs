@@ -17,12 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 var apiEnabled = bool.Parse(builder.Configuration["API_ENABLED"]);
 
 AddServices(builder);
-
-if (apiEnabled)
-{
-    AddSwagger(builder);
-}
-
+AddSwagger(builder);
 AddControllers(builder);
 AddAuthentication(builder);
 AddCors(builder);
