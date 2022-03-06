@@ -13,7 +13,6 @@ public class Check : Entity
     public DateTime CheckedAt { get; set; }
     public long RegionId { get; set; }
     public Region Region { get; set; }
-    public Guid Iteration { get; set; }
 }
 
 public enum CheckStatus
@@ -28,25 +27,36 @@ public class CheckConfiguration : IEntityTypeConfiguration<Check>
     public void Configure(EntityTypeBuilder<Check> builder)
     {
         builder
+            .ToTable("checks");
+        builder
             .Property(p => p.Id)
+            .HasColumnName("id")
             .IsRequired();
         builder
             .Property(p => p.SiteId)
+            .HasColumnName("site_id")
             .IsRequired();
         builder
             .Property(p => p.Status)
+            .HasColumnName("status")
             .IsRequired();
         builder
             .Property(p => p.StatusCode)
+            .HasColumnName("status_code")
             .IsRequired();
         builder
             .Property(p => p.CheckedAt)
+            .HasColumnName("checked_at")
             .IsRequired();
         builder
+            .HasIndex(p => p.CheckedAt);            
+        builder
             .Property(p => p.SpentTime)
+            .HasColumnName("spent_time")
             .IsRequired();
         builder
             .Property(p => p.RegionId)
+            .HasColumnName("region_id")
             .IsRequired();
         builder
             .HasOne(r => r.Site)
@@ -54,8 +64,5 @@ public class CheckConfiguration : IEntityTypeConfiguration<Check>
             .HasForeignKey(r => r.SiteId);
         builder
             .HasOne(c => c.Region);
-        builder
-            .Property(p => p.Iteration)
-            .IsRequired();
     }
 }

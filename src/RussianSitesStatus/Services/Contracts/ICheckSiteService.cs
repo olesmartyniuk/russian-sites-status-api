@@ -5,6 +5,6 @@ namespace RussianSitesStatus.Services.Contracts
 {
     public interface ICheckSiteService
     {
-        Task<Check> CheckAsync(SiteVM site, RegionVM region, Guid iteration);
+        Task<Check> CheckAsync(Site site, Region region, DateTime checkedAt);
     }
 }

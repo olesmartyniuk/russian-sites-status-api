@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RussianSitesStatus.Database;
@@ -11,9 +12,10 @@ using RussianSitesStatus.Database;
 namespace RussianSitesStatus.Database.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20220306022752_RemovedIterationProperty")]
+    partial class RemovedIterationProperty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,34 +28,27 @@ namespace RussianSitesStatus.Database.Migrations
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
+                        .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CheckedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("checked_at");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("RegionId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("region_id");
+                        .HasColumnType("bigint");
 
                     b.Property<long>("SiteId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("site_id");
+                        .HasColumnType("bigint");
 
                     b.Property<int>("SpentTime")
-                        .HasColumnType("integer")
-                        .HasColumnName("spent_time");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer")
-                        .HasColumnName("status");
+                        .HasColumnType("integer");
 
                     b.Property<int>("StatusCode")
-                        .HasColumnType("integer")
-                        .HasColumnName("status_code");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -63,78 +58,67 @@ namespace RussianSitesStatus.Database.Migrations
 
                     b.HasIndex("SiteId");
 
-                    b.ToTable("checks", (string)null);
+                    b.ToTable("Checks");
                 });
 
             modelBuilder.Entity("RussianSitesStatus.Database.Models.Region", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
+                        .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("text")
-                        .HasColumnName("code");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
+                        .HasColumnType("text");
 
                     b.Property<bool>("ProxyIsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("proxy_is_active");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ProxyPassword")
-                        .HasColumnType("text")
-                        .HasColumnName("proxy_password");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProxyUrl")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("proxy_url");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProxyUser")
-                        .HasColumnType("text")
-                        .HasColumnName("proxy_user");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("regions", (string)null);
+                    b.ToTable("Regions");
                 });
 
             modelBuilder.Entity("RussianSitesStatus.Database.Models.Site", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
+                        .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
+                        .HasColumnType("text");
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("url");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Url")
                         .IsUnique();
 
-                    b.ToTable("sites", (string)null);
+                    b.ToTable("Sites");
                 });
 
             modelBuilder.Entity("RussianSitesStatus.Database.Models.Check", b =>
