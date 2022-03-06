@@ -14,38 +14,27 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var apiEnabled = bool.Parse(builder.Configuration["API_ENABLED"]);
+
 AddServices(builder);
-AddControllers(builder);
-AddSwagger(builder);
-AddAuthentication(builder);
-AddCors(builder);
 
-builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
-builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
-
-builder.WebHost.UseKestrel((context, options) =>
+if (apiEnabled)
 {
-    var port = Environment.GetEnvironmentVariable("PORT");
-    if (!string.IsNullOrEmpty(port))
-    {
-        options.ListenAnyIP(int.Parse(port));
-    }
-});
+    AddControllers(builder);
+    AddSwagger(builder);
+    AddAuthentication(builder);
+    AddCors(builder);
+
+    ConfigureKestrel(builder);
+}
 
 // Configure the HTTP request pipeline.
 var app = builder.Build();
-app.UseCors("CorsPolicy");
-app.UseSwagger();
 
-app.UseSwaggerUI(c =>
+if (apiEnabled)
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mordor sites status API");
-    c.RoutePrefix = string.Empty;
-    c.DocumentTitle = "Mordor sites status API";
-});
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
+    ConfigureHttpPipeline(app);
+}
 
 CreateDbIfNotExist(app);
 
@@ -120,6 +109,9 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddHostedService<MemoryDataFetcher>();
     services.AddHostedService<SyncSitesWorker>();
     services.AddHostedService<MonitorStatusWorker>();
+
+    builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
+    builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
 }
 
 static void AddCors(WebApplicationBuilder builder)
@@ -166,4 +158,32 @@ static void AddControllers(WebApplicationBuilder builder)
 {
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+}
+
+void ConfigureKestrel(WebApplicationBuilder builder)
+{
+    builder.WebHost.UseKestrel((context, options) =>
+    {
+        var port = Environment.GetEnvironmentVariable("PORT");
+        if (!string.IsNullOrEmpty(port))
+        {
+            options.ListenAnyIP(int.Parse(port));
+        }
+    });
+}
+
+void ConfigureHttpPipeline(WebApplication app)
+{
+    app.UseCors("CorsPolicy");
+    app.UseSwagger();
+
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mordor sites status API");
+        c.RoutePrefix = string.Empty;
+        c.DocumentTitle = "Mordor sites status API";
+    });
+    app.UseHttpsRedirection();
+    app.UseAuthorization();
+    app.MapControllers();
 }
