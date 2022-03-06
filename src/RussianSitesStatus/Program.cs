@@ -24,9 +24,9 @@ if (apiEnabled)
     AddSwagger(builder);
     AddAuthentication(builder);
     AddCors(builder);
-
-    ConfigureKestrel(builder);
 }
+
+ConfigureKestrel(builder);
 
 // Configure the HTTP request pipeline.
 var app = builder.Build();
