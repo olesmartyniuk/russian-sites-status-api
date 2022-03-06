@@ -21,9 +21,15 @@ namespace RussianSitesStatus.Services
                 var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
                 var siteDetailsVMList = new List<SiteDetailsVM>();
-                var sitesDB = await databaseStorage.GetAllSitesWithLastChecks();
-                var statuses = (await databaseStorage.GetAllStatuses()).ToDictionary(x => x.SiteId, y => y.Status);
-                var uptime = (await databaseStorage.GetAllUptime()).ToDictionary(x => x.SiteId, y => y.UpTime);
+
+                var sitesDB = await databaseStorage
+                    .GetAllSitesWithLastChecks();
+
+                var statuses = (await databaseStorage.GetAllStatuses())
+                    .ToDictionary(x => x.SiteId, y => y.Status);
+
+                var uptime = (await databaseStorage.GetAllUptime())
+                    .ToDictionary(x => x.SiteId, y => y.UpTime);
 
                 foreach (var siteDbItem in sitesDB)
                 {
@@ -46,12 +52,23 @@ namespace RussianSitesStatus.Services
             return result;
         }
 
-        private SiteDetailsVM GetSiteDetailsVM(Site siteDbItem, IReadOnlyDictionary<long, float> uptimePerSite, IReadOnlyDictionary<long, CheckStatus> statusPerSite)
+        private SiteDetailsVM GetSiteDetailsVM(
+            Site siteDbItem, 
+            IReadOnlyDictionary<long, float> uptimePerSite, 
+            IReadOnlyDictionary<long, CheckStatus> statusPerSite)
         {
-            var lastItem = siteDbItem.Checks.OrderBy(check => check.CheckedAt).LastOrDefault();
+            var lastItem = siteDbItem
+                .Checks
+                .OrderBy(check => check.CheckedAt).LastOrDefault();
 
-            var status =  statusPerSite.TryGetValue(siteDbItem.Id, out var siteStatus) ? GetSiteStatus(siteStatus) : SiteStatus.Unknown;
-            var uptime = uptimePerSite.TryGetValue(siteDbItem.Id, out var result1) ? (float?)result1 * 100 : null;
+            var status =  statusPerSite.TryGetValue(siteDbItem.Id, out var siteStatus) 
+                ? GetSiteStatus(siteStatus) 
+                : SiteStatus.Unknown;
+            
+            var uptime = uptimePerSite.TryGetValue(siteDbItem.Id, out var result) 
+                ? (float?)result * 100 
+                : null;
+            
             return new SiteDetailsVM
             {
                 Id = siteDbItem.Id.ToString(),
@@ -69,7 +86,11 @@ namespace RussianSitesStatus.Services
         private List<ServerDto> GetServers(ICollection<Check> checks)
         {
             var servers = new List<ServerDto>();
-            var lastCheck = checks.OrderBy(check => check.CheckedAt).LastOrDefault();
+            
+            var lastCheck = checks
+                .OrderBy(check => check.CheckedAt)
+                .LastOrDefault();
+            
             foreach (var check in checks)
                 servers.Add(new ServerDto
                 {
