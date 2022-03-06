@@ -8,6 +8,7 @@ public class Site : Entity
     public string Name { get; set; }
     public string Url { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime CheckedAt { get; set; }
     public ICollection<Check> Checks { get; set; }
 
     public Site()
@@ -39,7 +40,12 @@ public class SiteConfiguration : IEntityTypeConfiguration<Site>
             .HasColumnName("created_at")
             .IsRequired();
         builder
+           .Property(p => p.CheckedAt)
+           .HasColumnName("checked_at");
+        builder
             .HasIndex(p => p.Url)
             .IsUnique();
+        builder
+            .HasIndex(p => p.CheckedAt);
     }
 }

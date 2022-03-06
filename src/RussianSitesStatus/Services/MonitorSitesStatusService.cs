@@ -54,6 +54,7 @@ public class MonitorSitesStatusService
         }
 
         await Task.WhenAll(tasks);
+        await UpdateCheckedAt(checkedAt);
 
         timer.Stop();
         return (int)timer.Elapsed.TotalSeconds;
@@ -101,6 +102,15 @@ public class MonitorSitesStatusService
         var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
         await databaseStorage.AddChecksAsync(checks.ToList());
+    }
+
+    private async Task UpdateCheckedAt(DateTime checkedAt)
+    {
+        using var serviceScope = _serviceScopeFactory.CreateScope();
+
+        var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+
+        await databaseStorage.UpdateCheckedAt(checkedAt);
     }
 
     private bool IsValidForProcessing(IEnumerable<Site> allSites, IEnumerable<Region> allRegions)

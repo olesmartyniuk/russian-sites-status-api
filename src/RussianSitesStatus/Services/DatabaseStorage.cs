@@ -1,9 +1,11 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using RussianSitesStatus.Database;
 using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models.Dtos;
+using System.Data.SqlClient;
 
 namespace RussianSitesStatus.Services;
 
@@ -87,25 +89,21 @@ public class DatabaseStorage
         var connection = _db.Database.GetDbConnection();
         var checks = await connection.QueryAsync<Check>(
             @"select
-	            id as Id,
-	            site_id as SiteId,
-	            status as Status,
-	            status_code as StatusCode,
-	            spent_time as SpentTime,
-	            checked_at as CheckedAt,
-	            region_id as RegionId
+                ch.id as Id,
+	            ch.site_id as SiteId,
+                ch.status as Status,
+                ch.status_code as StatusCode,
+                ch.spent_time as SpentTime,
+                ch.checked_at as CheckedAt,
+                ch.region_id as RegionId
             from
-	            checks as ck
+                checks as ch
+            join 
+	            sites as st on st.id = ch.site_id 
             where
-	            checked_at = (
-	            select
-		            max(checked_at)
-	            from
-		            checks
-	            where
-		            checks.site_id = ck.site_id )
+                st.checked_at = ch.checked_at 
             order by
-	            site_id");
+	            ch.site_id");
 
         var checksBySiteId = checks
             .GroupBy(c => c.SiteId)
@@ -154,6 +152,18 @@ public class DatabaseStorage
 	            site_id,
 	            checked_at");
         return statuses;
+    }
+
+    public async Task UpdateCheckedAt(DateTime checkedAt)
+    {
+        var commandText = 
+            @"update 
+                sites 
+              set 
+                checked_at = @CheckedAt";
+ 
+        var checkedAtParam = new NpgsqlParameter("@CheckedAt", checkedAt);
+        await _db.Database.ExecuteSqlRawAsync(commandText, checkedAtParam);
     }
 
     public async Task<IEnumerable<Site>> GetAllSitesWithChecks()
