@@ -32,7 +32,7 @@ public class MemoryDataFetcher : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var siteCheckInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
+        var siteCheckInterval = int.Parse(_configuration["MEMORY_DATA_SYNC_INTERVAL"]);
         if (siteCheckInterval <= 0)
         {
             return;
