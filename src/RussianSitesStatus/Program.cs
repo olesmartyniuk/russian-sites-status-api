@@ -20,21 +20,19 @@ AddServices(builder);
 
 if (apiEnabled)
 {
-    AddControllers(builder);
     AddSwagger(builder);
-    AddAuthentication(builder);
-    AddCors(builder);
 }
+
+AddControllers(builder);
+AddAuthentication(builder);
+AddCors(builder);
 
 ConfigureKestrel(builder);
 
 // Configure the HTTP request pipeline.
 var app = builder.Build();
 
-if (apiEnabled)
-{
-    ConfigureHttpPipeline(app);
-}
+ConfigureHttpPipeline(app);
 
 CreateDbIfNotExist(app);
 
