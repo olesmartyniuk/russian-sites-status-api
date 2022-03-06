@@ -34,8 +34,8 @@ jobs:
     - name: Build and push
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: heroku container:push -a russian-sites-status-worker worker
+      run: heroku container:push -a russian-sites-status-worker web
     - name: Release
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: heroku container:release -a russian-sites-status-worker worker 
+      run: heroku container:release -a russian-sites-status-worker web 
