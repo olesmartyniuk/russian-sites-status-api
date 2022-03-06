@@ -87,18 +87,14 @@ namespace RussianSitesStatus.Services
         {
             var servers = new List<ServerDto>();
             
-            var lastCheck = checks
-                .OrderBy(check => check.CheckedAt)
-                .LastOrDefault();
-            
             foreach (var check in checks)
                 servers.Add(new ServerDto
                 {
                     Region = check.Region.Name,
                     RegionCode = check.Region.Code,
-                    Status = GetSiteStatus(lastCheck!.Status),
-                    StatusCode = lastCheck.StatusCode,
-                    LastTestedAt = lastCheck.CheckedAt,
+                    Status = GetSiteStatus(check.Status),
+                    StatusCode = check.StatusCode,
+                    LastTestedAt = check.CheckedAt,
                 });
 
             return servers;
