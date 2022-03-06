@@ -8,24 +8,18 @@ namespace RussianSitesStatus.Services;
 
 public class MonitorSitesStatusService
 {
-    private readonly InMemoryStorage<SiteVM> _liteInMemorySiteStorage;
-    private readonly BaseInMemoryStorage<RegionVM> _inMemoryRegionStorage;
     private readonly ICheckSiteService _checkSiteService;
     private readonly ILogger<MonitorSitesStatusService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private IConfiguration _configuration;
 
-    public MonitorSitesStatusService(
-        BaseInMemoryStorage<RegionVM> inMemoryRegionStorage,
-        InMemoryStorage<SiteVM> liteInMemorySiteStorage,
+    public MonitorSitesStatusService(                
         ICheckSiteService checkSiteService,
         IServiceScopeFactory serviceScopeFactory,
         ILogger<MonitorSitesStatusService> logger,
         IConfiguration configuration)
-    {
-        _liteInMemorySiteStorage = liteInMemorySiteStorage;
+    {        
         _checkSiteService = checkSiteService;
-        _inMemoryRegionStorage = inMemoryRegionStorage;
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
         _configuration = configuration;
@@ -33,15 +27,17 @@ public class MonitorSitesStatusService
 
     public async Task<int> MonitorAllAsync()
     {
+        using var serviceScope = _serviceScopeFactory.CreateScope();
+
+        var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+
         var timer = new Stopwatch();
         timer.Start();
 
-        var allSites = _liteInMemorySiteStorage
-            .GetAll();
-
-        var allRegions = _inMemoryRegionStorage
-            .GetAll()
-            .Where(r => r.ProxyIsActive);
+        var allSites = await databaseStorage
+            .GetAllSites();
+        var allRegions = await databaseStorage
+            .GetRegions(true);
 
         if (!IsValidForProcessing(allSites, allRegions))
         {
@@ -49,12 +45,12 @@ public class MonitorSitesStatusService
             return (int)timer.Elapsed.TotalSeconds;
         }
 
-        var iteration = Guid.NewGuid();
+        var checkedAt = DateTime.UtcNow;
 
         var tasks = new List<Task>();
         foreach (var region in allRegions)
         {
-            tasks.Add(Task.Run(async () => await CheckSitesForRegion(region, allSites, iteration)));
+            tasks.Add(Task.Run(async () => await CheckSitesForRegion(region, allSites, checkedAt)));
         }
 
         await Task.WhenAll(tasks);
@@ -63,7 +59,7 @@ public class MonitorSitesStatusService
         return (int)timer.Elapsed.TotalSeconds;
     }
 
-    private async Task CheckSitesForRegion(RegionVM region, IEnumerable<SiteVM> sites, Guid iteration)
+    private async Task CheckSitesForRegion(Region region, IEnumerable<Site> sites, DateTime checkedAt)
     {
         var checks = new ConcurrentBag<Check>();
 
@@ -81,7 +77,7 @@ public class MonitorSitesStatusService
                 try
                 {
                     //await Task.Delay(2000);
-                    var check = await _checkSiteService.CheckAsync(site, region, iteration);
+                    var check = await _checkSiteService.CheckAsync(site, region, checkedAt);
                     checks.Add(check);
                 }
                 finally
@@ -107,7 +103,7 @@ public class MonitorSitesStatusService
         await databaseStorage.AddChecksAsync(checks.ToList());
     }
 
-    private bool IsValidForProcessing(IEnumerable<SiteVM> allSites, IEnumerable<RegionVM> allRegions)
+    private bool IsValidForProcessing(IEnumerable<Site> allSites, IEnumerable<Region> allRegions)
     {
         if (!allSites.Any() || !allRegions.Any())
         {

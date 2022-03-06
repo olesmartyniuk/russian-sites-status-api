@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RussianSitesStatus.Database;
@@ -11,9 +12,10 @@ using RussianSitesStatus.Database;
 namespace RussianSitesStatus.Database.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20220306024237_RenamedTables")]
+    partial class RenamedTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,8 +78,7 @@ namespace RussianSitesStatus.Database.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("text")
-                        .HasColumnName("code");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -85,8 +86,7 @@ namespace RussianSitesStatus.Database.Migrations
                         .HasColumnName("name");
 
                     b.Property<bool>("ProxyIsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("proxy_is_active");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ProxyPassword")
                         .HasColumnType("text")

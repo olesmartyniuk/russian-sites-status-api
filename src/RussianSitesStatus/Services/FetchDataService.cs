@@ -110,7 +110,7 @@ namespace RussianSitesStatus.Services
             {
                 var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
-                var regions = await databaseStorage.GetAllRegions();
+                var regions = await databaseStorage.GetRegions();
                 return regions.Select(region => new RegionVM
                 {
                     Id = region.Id,

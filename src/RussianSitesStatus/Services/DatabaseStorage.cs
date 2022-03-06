@@ -45,11 +45,24 @@ public class DatabaseStorage
     {
         var connection = _db.Database.GetDbConnection();
         var upTime = await connection.QueryAsync<UpTimePerSiteDto>(
-            @"select ""SiteId"", count(case when g.IsUp = true then g.""SiteId"" end)/count(""SiteId"")::float as UpTime from 
-                   (select ""SiteId"", ""Iteration"", bool_or(sq.IsUp) as IsUp from
-                        (select ""CheckedAt"", ""SiteId"", ""Iteration"", ""StatusCode"" >= 200 and ""StatusCode"" <= 300 as IsUp FROM public.""Checks""where ""CheckedAt"" >= (now() at time zone 'utc') - INTERVAL '24 HOURS') as sq
-                    group by ""SiteId"", ""Iteration"") as g
-                 group by ""SiteId""");
+            @"select
+	            site_id as SiteId,
+	            count(case when g.IsUp = true then g.site_id end)/ count(site_id)::float as UpTime
+            from
+	            (
+	            select
+		            site_id, checked_at, bool_or(sq.IsUp) as IsUp
+	            from
+		            (
+		            select
+			            checked_at, site_id, status_code >= 200
+			            and status_code <= 300 as IsUp
+		            from
+			            checks c where checked_at >= (now() at time zone 'utc') - interval '24 HOURS') as sq
+	            group by
+		            site_id, checked_at) as g
+            group by
+	            site_id");
         return upTime;
     }
 
@@ -66,25 +79,52 @@ public class DatabaseStorage
            .AsNoTracking()
            .ToListAsync();
 
-        var query =
-            from site in sites
-            from check in _db.Checks
-                .Where(c => c.SiteId == site.Id)
-                .Include(c => c.Region)
-                .OrderByDescending(c => c.CheckedAt)
-                .Take(10) // TODO: should be equal to the number of active regions
-            select check;
+        var regions = await _db.Regions
+            .ToListAsync();
+        var regionsById = regions
+            .ToDictionary(r => r.Id, r => r);
 
-        var lastChecks = query.ToList();
+        var connection = _db.Database.GetDbConnection();
+        var checks = await connection.QueryAsync<Check>(
+            @"select
+	            id as Id,
+	            site_id as SiteId,
+	            status as Status,
+	            status_code as StatusCode,
+	            spent_time as SpentTime,
+	            checked_at as CheckedAt,
+	            region_id as RegionId
+            from
+	            checks as ck
+            where
+	            checked_at = (
+	            select
+		            max(checked_at)
+	            from
+		            checks
+	            where
+		            checks.site_id = ck.site_id )
+            order by
+	            site_id");
+
+        var checksBySiteId = checks
+            .GroupBy(c => c.SiteId)
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         foreach (var site in sites)
         {
-            var checks = lastChecks
-                .Where(c => c.SiteId == site.Id)
-                .ToList();
-            foreach (var check in checks)
+            if (checksBySiteId.ContainsKey(site.Id))
             {
-                site.Checks.Add(check);
+                var lastChecks = checksBySiteId[site.Id];
+                foreach (var check in lastChecks)
+                {
+                    if (regionsById.ContainsKey(check.RegionId))
+                    {
+                        check.Region = regionsById[check.RegionId];
+                    }
+                        
+                    site.Checks.Add(check);
+                }
             }
         }
 
@@ -95,11 +135,24 @@ public class DatabaseStorage
     {
         var connection = _db.Database.GetDbConnection();
         var statuses = await connection.QueryAsync<StatusPerSiteDto>(
-            @"select ""SiteId"", min(sq.""Status"") as Status
-                 from (select ""CheckedAt"", ""SiteId"", ""Iteration"", ""Status""
-                       from public.""Checks"" where ""Iteration"" = 
-                                                    (select ""Iteration"" FROM public.""Checks"" order by ""CheckedAt"" limit 1)) as sq
-                 group by ""SiteId"", ""Iteration""");
+            @"select
+	            site_id as SiteId,
+	            min(sq.status) as Status
+            from
+	            (
+	            select
+		            checked_at, site_id, status
+	            from
+		            checks
+	            where
+		            checked_at = (
+		            select
+			            max(checked_at)
+		            from
+			            checks)) as sq
+            group by
+	            site_id,
+	            checked_at");
         return statuses;
     }
 
@@ -170,11 +223,17 @@ public class DatabaseStorage
         await _db.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Region>> GetAllRegions()
+    public async Task<IEnumerable<Region>> GetRegions(bool onlyActive = false)
     {
-        return await _db.Regions
-            .AsNoTracking()
-            .ToListAsync();
+        var query = _db.Regions
+            .AsNoTracking();
+
+        if (onlyActive)
+        {
+            query = query.Where(r => r.ProxyIsActive);
+        }
+
+        return await query.ToListAsync();
     }
 
     public async Task<Region> AddRegion(Region newRegion)

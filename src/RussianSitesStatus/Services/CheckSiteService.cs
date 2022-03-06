@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using RussianSitesStatus.Database.Models;
-using RussianSitesStatus.Models;
 using RussianSitesStatus.Services.Contracts;
 using System.Diagnostics;
 using System.Net;
@@ -18,7 +17,7 @@ public class CheckSiteService : ICheckSiteService
         _logger = logger;
     }
 
-    private HttpClient CreateHttpClient(RegionVM region)
+    private HttpClient CreateHttpClient(Region region)
     {
         var proxy = new WebProxy
         {
@@ -36,7 +35,7 @@ public class CheckSiteService : ICheckSiteService
         return client;
     }
 
-    public async Task<Check> CheckAsync(SiteVM site, RegionVM region, Guid iteration)
+    public async Task<Check> CheckAsync(Site site, Region region, DateTime checkedAt)
     {
         var timer = new Stopwatch();
         var statusCode = -1;
@@ -46,44 +45,42 @@ public class CheckSiteService : ICheckSiteService
         {
             var httpClient = HttpClientsByRegion.GetOrAdd(region.ProxyUrl, CreateHttpClient(region));
             timer.Start();
-            var response = await httpClient.GetAsync(site.WebsiteUrl);
+            var response = await httpClient.GetAsync(site.Url);
             statusCode = (int)response.StatusCode;
         }
         catch (TaskCanceledException ex)
         {
             statusCode = 0;
-            _logger.LogError($"Timeout error on site. Proxy url: {region.ProxyUrl}, Site: {site.WebsiteUrl}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
+            _logger.LogError($"Timeout error on site. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError($"Proxy is not available. Proxy url: {region.ProxyUrl}, Site: {site.WebsiteUrl}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
+            _logger.LogError($"Proxy is not available. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Unhandled exception. Proxy url: {region.ProxyUrl}, Site: {site.WebsiteUrl}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
+            _logger.LogError($"Unhandled exception. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}, Trace: {ex.StackTrace}");
         }
         finally
         {
             timer.Stop();
-            newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds, iteration);
+            newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds, checkedAt);
         }
         return newCheck;
 
     }
 
-    public Check BuildCheck(int statusCode, SiteVM site, RegionVM region, int spentTime, Guid iteration)
+    public Check BuildCheck(int statusCode, Site site, Region region, int spentTime, DateTime checkedAt)
     {
-        var check = new Check
+        return new Check
         {
-            CheckedAt = DateTime.UtcNow,
-            SiteId = int.Parse(site.Id),
+            CheckedAt = checkedAt,
+            SiteId = site.Id,
             StatusCode = statusCode,
             SpentTime = spentTime,
-            RegionId = region.Id,
-            Iteration = iteration,
+            RegionId = region.Id,            
             Status = GetStatus(statusCode)
-        };
-        return check;
+        };        
     }
     
     private CheckStatus GetStatus(int statusCode)

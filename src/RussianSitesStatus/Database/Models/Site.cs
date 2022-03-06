@@ -21,16 +21,22 @@ public class SiteConfiguration : IEntityTypeConfiguration<Site>
     public void Configure(EntityTypeBuilder<Site> builder)
     {
         builder
+            .ToTable("sites");
+        builder
             .Property(p => p.Id)
+            .HasColumnName("id")
             .IsRequired();
         builder
             .Property(p => p.Name)
+            .HasColumnName("name")
             .IsRequired();
         builder
             .Property(p => p.Url)
+            .HasColumnName("url")
             .IsRequired();
         builder
             .Property(p => p.CreatedAt)
+            .HasColumnName("created_at")
             .IsRequired();
         builder
             .HasIndex(p => p.Url)
