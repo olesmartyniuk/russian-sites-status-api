@@ -56,7 +56,7 @@ info: Microsoft.Hosting.Lifetime[14]
 ## База даних
 Для використання бази даних локально необхідно встановити PostgreSQL або запустити docker контейнер:
 ```
-docker run --name mordor-sites-status -e POSTGRES_PASSWORD=123 -d postgres
+docker run --name mordor-sites-status -e POSTGRES_PASSWORD=123 -p 5432:5432 -d postgres
 ```
 
 Щоб підключити базу даних локально, необхідно встановити змінну оточення `DATABASE_URL` і вказати URL підключення до БД.
