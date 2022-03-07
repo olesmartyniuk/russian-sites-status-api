@@ -3,18 +3,18 @@ using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Services.Contracts;
 using System.Collections.Concurrent;
 
-namespace RussianSitesStatus.Services.StatusCake;
+namespace RussianSitesStatus.Services;
 
 public class SyncSitesDatabaseService : ISyncSitesService
 {
     private readonly IEnumerable<ISiteSource> _siteSources;
     private readonly DatabaseStorage _database;
-    private readonly ILogger<SyncSitesStatusCakeService> _logger;
+    private readonly ILogger<SyncSitesDatabaseService> _logger;
 
     public SyncSitesDatabaseService(
         IEnumerable<ISiteSource> siteSources,
         DatabaseStorage database,
-        ILogger<SyncSitesStatusCakeService> logger)
+        ILogger<SyncSitesDatabaseService> logger)
     {
         _siteSources = siteSources;
         _database = database;

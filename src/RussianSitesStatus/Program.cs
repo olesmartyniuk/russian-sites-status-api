@@ -9,12 +9,9 @@ using RussianSitesStatus.Database;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Services;
 using RussianSitesStatus.Services.Contracts;
-using RussianSitesStatus.Services.StatusCake;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
-
-var apiEnabled = bool.Parse(builder.Configuration["API_ENABLED"]);
 
 AddServices(builder);
 AddSwagger(builder);
@@ -85,12 +82,10 @@ static void AddServices(WebApplicationBuilder builder)
             );
     }, ServiceLifetime.Scoped);
 
-    services.AddSingleton<StatusCakeService>();
     services.AddSingleton<InMemoryStorage<SiteVM>>();
     services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
     services.AddSingleton<BaseInMemoryStorage<RegionVM>>();
 
-    services.AddSingleton<StatusCakeUpCheckService>();
     services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
     services.AddSingleton<IFetchDataService, FetchDataService>();
     services.AddTransient<MonitorSitesStatusService>();
