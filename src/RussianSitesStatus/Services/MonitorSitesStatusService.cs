@@ -1,5 +1,4 @@
 using RussianSitesStatus.Database.Models;
-using RussianSitesStatus.Models;
 using RussianSitesStatus.Services.Contracts;
 using System.Collections.Concurrent;
 using System.Diagnostics;

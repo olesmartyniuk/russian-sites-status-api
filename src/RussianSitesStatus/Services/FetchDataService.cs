@@ -57,10 +57,6 @@ namespace RussianSitesStatus.Services
             IReadOnlyDictionary<long, float> uptimePerSite, 
             IReadOnlyDictionary<long, CheckStatus> statusPerSite)
         {
-            var lastItem = siteDbItem
-                .Checks
-                .OrderBy(check => check.CheckedAt).LastOrDefault();
-
             var status =  statusPerSite.TryGetValue(siteDbItem.Id, out var siteStatus) 
                 ? GetSiteStatus(siteStatus) 
                 : SiteStatus.Unknown;
@@ -71,15 +67,12 @@ namespace RussianSitesStatus.Services
             
             return new SiteDetailsVM
             {
-                Id = siteDbItem.Id.ToString(),
-                Name = siteDbItem.Name,
-                TestType = "HTTP",
-                WebsiteUrl = siteDbItem.Url,
+                Id = siteDbItem.Id,
+                Name = siteDbItem.Name,                
                 Status = status,
                 Uptime = uptime,
-                Servers = GetServers(siteDbItem.Checks),
-                Timeout = lastItem?.SpentTime ?? 0,
-                LastTestedAt = lastItem?.CheckedAt ?? default(DateTime)
+                Servers = GetServers(siteDbItem.Checks),                
+                LastTestedAt = siteDbItem.CheckedAt
             };
         }
 
@@ -93,8 +86,7 @@ namespace RussianSitesStatus.Services
                     Region = check.Region.Name,
                     RegionCode = check.Region.Code,
                     Status = GetSiteStatus(check.Status),
-                    StatusCode = check.StatusCode,
-                    LastTestedAt = check.CheckedAt,
+                    StatusCode = check.StatusCode                    
                 });
 
             return servers;

@@ -58,7 +58,7 @@ public class SiteController : ControllerBase
     /// <response code="404">Site not found</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/{id}")]
-    public ActionResult<SiteDetailsVM> Get(string id)
+    public ActionResult<SiteDetailsVM> Get(long id)
     {
         var result = _fullStatusStorage.Get(id);
 

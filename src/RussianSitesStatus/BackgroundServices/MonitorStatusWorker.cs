@@ -20,6 +20,7 @@ public class MonitorStatusWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        return;
         var siteCheckInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
         if (siteCheckInterval <= 0)
         {
