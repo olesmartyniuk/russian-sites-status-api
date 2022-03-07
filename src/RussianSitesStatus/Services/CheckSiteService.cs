@@ -3,6 +3,7 @@ using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Services.Contracts;
 using System.Diagnostics;
 using System.Net;
+using RussianSitesStatus.Extensions;
 
 namespace RussianSitesStatus.Services;
 public class CheckSiteService : ICheckSiteService
@@ -35,7 +36,7 @@ public class CheckSiteService : ICheckSiteService
         return client;
     }
 
-    public async Task<Check> CheckAsync(Site site, Region region, DateTime checkedAt)
+    public async Task<Check> Check(Site site, Region region, DateTime checkedAt)
     {
         var timer = new Stopwatch();
         var statusCode = -1;
@@ -67,7 +68,36 @@ public class CheckSiteService : ICheckSiteService
             newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds, checkedAt);
         }
         return newCheck;
+    }
 
+    public async Task<Site> CheckByUrl(string siteUrl, IEnumerable<Region> regions)
+    {
+        var checkedAt = DateTime.UtcNow;
+
+        var site = new Site
+        {
+            Id = 0,
+            Name = siteUrl.NormalizeSiteName(),
+            Url = siteUrl.NormalizeSiteUrl(),
+            CheckedAt = checkedAt
+        };
+
+        var checkTasks = new List<Task<Check>>();
+
+        foreach (var region in regions)
+        {
+            var checkTask = Check(site, region, checkedAt);
+            checkTasks.Add(checkTask);
+        }
+
+        var checks = await Task.WhenAll(checkTasks);
+
+        foreach (var check in checks)
+        {
+            site.Checks.Add(check);
+        }        
+
+        return site;
     }
 
     public Check BuildCheck(int statusCode, Site site, Region region, int spentTime, DateTime checkedAt)
@@ -78,7 +108,8 @@ public class CheckSiteService : ICheckSiteService
             SiteId = site.Id,
             StatusCode = statusCode,
             SpentTime = spentTime,
-            RegionId = region.Id,            
+            RegionId = region.Id,
+            Region = region,
             Status = GetStatus(statusCode)
         };        
     }

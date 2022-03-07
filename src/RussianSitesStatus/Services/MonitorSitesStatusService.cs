@@ -77,7 +77,7 @@ public class MonitorSitesStatusService
                 try
                 {
                     //await Task.Delay(2000);
-                    var check = await _checkSiteService.CheckAsync(site, region, checkedAt);
+                    var check = await _checkSiteService.Check(site, region, checkedAt);
                     checks.Add(check);
                 }
                 finally
