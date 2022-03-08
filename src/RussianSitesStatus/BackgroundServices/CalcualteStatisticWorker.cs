@@ -1,0 +1,53 @@
+using RussianSitesStatus.Extensions;
+using RussianSitesStatus.Services;
+using System.Diagnostics;
+
+namespace RussianSitesStatus.BackgroundServices;
+
+public class CalcualteStatisticWorker : BackgroundService
+{
+    private readonly ILogger<MonitorStatusWorker> _logger;
+    private readonly CalculateStatisticsService _calculateStatisticsService;
+    private IConfiguration _configuration;
+
+    public CalcualteStatisticWorker(
+        ILogger<MonitorStatusWorker> logger,
+        CalculateStatisticsService calculateStatisticsService,
+        IConfiguration configuration)
+    {
+        _logger = logger;
+        _calculateStatisticsService = calculateStatisticsService;
+        _configuration = configuration;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (!TimeSpan.TryParse(_configuration["CALCULATE_STATISTICS_AT"], out TimeSpan calculateAt))
+        {
+            return;
+        }
+
+        var spentTime = 0;
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(calculateAt.WaitTimeSpan(), stoppingToken);
+            try
+            {
+                var timer = new Stopwatch();
+                timer.Start();
+
+                await _calculateStatisticsService.CreateStatisticsAsync();
+
+                timer.Stop();
+                spentTime = (int)timer.Elapsed.TotalSeconds;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception while fetching statuses");
+            }
+            _logger.LogInformation($"{nameof(CalcualteStatisticWorker)}: executed iteration in {spentTime} seconds.");
+
+            await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+        }
+    }
+}
