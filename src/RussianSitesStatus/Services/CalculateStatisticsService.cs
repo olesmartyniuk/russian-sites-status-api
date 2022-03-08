@@ -21,9 +21,9 @@ public class CalculateStatisticsService
         using (var serviceScope = _serviceScopeFactory.CreateScope())
         {
             var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
-            var oldestDate = await databaseStorage.GetOldestCheckSiteDate();
+            var oldestDate = (await databaseStorage.GetOldestCheckSiteDate()).Date;
 
-            var siteIds = await databaseStorage.GetUniqueSiteIds();
+            var siteIds = await databaseStorage.GetUniqueSiteIdsAsync();
 
             var statisticDate = oldestDate.AddDays(1);
             while (statisticDate.Date < DateTime.UtcNow.Date)
@@ -32,6 +32,11 @@ public class CalculateStatisticsService
                 {
                     try
                     {
+                        if (await databaseStorage.HasStatisticsAsync(siteId, statisticDate))
+                        {
+                            continue;
+                        }
+
                         var statistics = await databaseStorage.CalculateStatisticAsync(siteId, statisticDate);
 
                         var newChec = new ChecksStatistics

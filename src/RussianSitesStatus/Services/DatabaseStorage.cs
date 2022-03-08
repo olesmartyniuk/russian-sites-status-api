@@ -153,7 +153,7 @@ public class DatabaseStorage
     public async Task UpdateCheckedAt(IEnumerable<Site> sitesToCheck, DateTime checkedAt)
     {
         var siteIds = string.Join(",", sitesToCheck.Select(s => s.Id));
-        var commandText = 
+        var commandText =
             @$"update 
                 sites 
               set 
@@ -269,12 +269,17 @@ public class DatabaseStorage
         return await connection.QuerySingleAsync<DateTime>(commandText);
     }
 
-    public async Task<IEnumerable<int>> GetUniqueSiteIds()
+    public async Task<IEnumerable<int>> GetUniqueSiteIdsAsync()
     {
         var commandText = @"SELECT DISTINCT site_id FROM checks;";
 
         var connection = _db.Database.GetDbConnection();
         return await connection.QueryAsync<int>(commandText);
+    }
+
+    public async Task<bool> HasStatisticsAsync(int siteId, DateTime date)
+    {
+        return await _db.ChecksStatistics.AnyAsync(cs => cs.SiteId == siteId && cs.Day == date);
     }
 
     public async Task<IEnumerable<StatisticInfo>> CalculateStatisticAsync(int siteId, DateTime date)
