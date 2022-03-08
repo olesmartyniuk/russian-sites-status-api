@@ -1,10 +1,13 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using Npgsql.NameTranslation;
+using NpgsqlTypes;
 using RussianSitesStatus.Database;
 using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models.Dtos;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace RussianSitesStatus.Services;
@@ -123,7 +126,7 @@ public class DatabaseStorage
                     {
                         check.Region = regionsById[check.RegionId];
                     }
-                        
+
                     site.Checks.Add(check);
                 }
             }
@@ -157,7 +160,7 @@ public class DatabaseStorage
                 checked_at = @CheckedAt
               where
                 id in ({siteIds})";
- 
+
         var checkedAtParam = new NpgsqlParameter("@CheckedAt", checkedAt);
         await _db.Database.ExecuteSqlRawAsync(commandText, checkedAtParam);
     }
@@ -256,5 +259,57 @@ public class DatabaseStorage
         var originalRegion = _db.Regions.Find(regionId);
         _db.Regions.Remove(originalRegion);
         await _db.SaveChangesAsync();
+    }
+
+    public async Task<DateTime> GetOldestCheckSiteDate()
+    {
+        var commandText = @"SELECT MIN(checked_at) FROM checks;";
+
+        var connection = _db.Database.GetDbConnection();
+        return await connection.QuerySingleAsync<DateTime>(commandText);
+    }
+
+    public async Task<IEnumerable<int>> GetUniqueSiteIds()
+    {
+        var commandText = @"SELECT DISTINCT site_id FROM checks;";
+
+        var connection = _db.Database.GetDbConnection();
+        return await connection.QueryAsync<int>(commandText);
+    }
+
+    public async Task<IEnumerable<StatisticInfo>> CalculateStatisticAsync(int siteId, DateTime date)
+    {
+        var commandText = @"SELECT * FROM fn_calculate_statistic_per_day(@siteId, @date)";
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@siteId", siteId);
+        parameters.Add("@date", date, DbType.Date);
+
+        var connection = _db.Database.GetDbConnection();
+        var result = await connection.QueryAsync<StatisticInfo>(commandText, parameters);
+        return result;
+    }
+
+    public async Task AddChecksStatisticsAsync(ChecksStatistics checksStatistics)
+    {
+        _db.ChecksStatistics.Add(checksStatistics);
+
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task DeleteStatistis(DateTime endDate)
+    {
+        var commandText = @"DELETE FROM checks WHERE checked_at <= @end_date;";
+
+        var endDateParam = new NpgsqlParameter("@end_date", endDate);
+        await _db.Database.ExecuteSqlRawAsync(commandText, endDateParam);
+    }
+
+    public async Task<DateTime> GetNewestStatistisDate()
+    {
+        var commandText = @"SELECT MAX(day) FROM ChecksStatistics;";
+
+        var connection = _db.Database.GetDbConnection();
+        return await connection.QuerySingleAsync<DateTime>(commandText);
     }
 }

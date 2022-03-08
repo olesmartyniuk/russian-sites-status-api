@@ -9,6 +9,8 @@ public class ApplicationContext : DbContext
     public DbSet<Site> Sites { get; set; }
     public DbSet<Check> Checks { get; set; }
     public DbSet<Region> Regions { get; set; }
+    public DbSet<ChecksStatistics> ChecksStatistics { get; set; }
+
 
     public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
     {
