@@ -40,3 +40,6 @@ src/Zbyrach.Api/Logs/
 
 # VS Code
 .vscode/launch.json
+
+appsettings.Development.json
+appsettings.Prod.json
