@@ -27,13 +27,11 @@ public class CalculateStatisticService
                 _logger.LogInformation("There is no any checks to procces.");
                 return;
             }
-            var oldestDate = oldestDateTime.Value.Date;
 
-            var siteIds = await databaseStorage.GetUniqueSiteIdsAsync();
-
-            var statisticDate = oldestDate;
+            var statisticDate = oldestDateTime.Value.Date;
             while (statisticDate.Date < DateTime.UtcNow.Date)
             {
+                var siteIds = await databaseStorage.GetUniqueSiteIdsAsync(statisticDate);
                 foreach (var siteId in siteIds)
                 {
                     try

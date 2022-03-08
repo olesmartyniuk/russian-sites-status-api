@@ -266,12 +266,15 @@ public class DatabaseStorage
         return await connection.QuerySingleAsync<DateTime?>(commandText);
     }
 
-    public async Task<IEnumerable<int>> GetUniqueSiteIdsAsync()
+    public async Task<IEnumerable<int>> GetUniqueSiteIdsAsync(DateTime day)
     {
-        var commandText = @"SELECT DISTINCT site_id FROM checks;";
+        var commandText = @"SELECT DISTINCT site_id FROM checks WHERE CAST(checked_at AS date) = @day;";
+
+        var parameters = new DynamicParameters();
+        parameters.Add("@day", day, DbType.Date);
 
         var connection = _db.Database.GetDbConnection();
-        return await connection.QueryAsync<int>(commandText);
+        return await connection.QueryAsync<int>(commandText, parameters);
     }
 
     public async Task<bool> HasStatisticsAsync(int siteId, DateTime date)
