@@ -1,6 +1,7 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Services;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace RussianSitesStatus.BackgroundServices;
 
@@ -22,7 +23,7 @@ public class ArchiveWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!TimeSpan.TryParse(_configuration["ARCHIVE_AT"], out TimeSpan archiveAt))
+        if (!TimeSpan.TryParseExact(_configuration["ARCHIVE_AT"], "hh':'mm':'ss", CultureInfo.CurrentCulture, out TimeSpan archiveAt))
         {
             return;
         }
