@@ -75,7 +75,7 @@ public class SyncSitesDatabaseService : ISyncSitesService
 
     private async Task<IEnumerable<string>> GetSiteUrlsToAdd(IEnumerable<string> allSiteUrls)
     {
-        var existingSites = await _database.GetAllSites();
+        var existingSites = await _database.GetSites();
         var existingSiteUrls = existingSites.Select(s => s.Url);
 
         return allSiteUrls

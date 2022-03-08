@@ -11,6 +11,9 @@ public class MonitorSitesStatusService
     private readonly ILogger<MonitorSitesStatusService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private IConfiguration _configuration;
+    private readonly int _maxSitesInQueue;
+    private readonly int _sitesSkip;
+    private readonly int _sitesTake;
 
     public MonitorSitesStatusService(                
         ICheckSiteService checkSiteService,
@@ -22,6 +25,10 @@ public class MonitorSitesStatusService
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
         _configuration = configuration;
+
+        _maxSitesInQueue = int.Parse(_configuration["MAX_SITES_IN_QUEUE"]);
+        _sitesSkip = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[0]);
+        _sitesTake = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[1]);
     }
 
     public async Task<int> MonitorAllAsync()
@@ -33,12 +40,12 @@ public class MonitorSitesStatusService
         var timer = new Stopwatch();
         timer.Start();
 
-        var allSites = await databaseStorage
-            .GetAllSites();
-        var allRegions = await databaseStorage
+        var sitesToCheck = await databaseStorage
+            .GetSites(_sitesSkip, _sitesTake);
+        var regionsToCheck = await databaseStorage
             .GetRegions(true);
 
-        if (!IsValidForProcessing(allSites, allRegions))
+        if (!IsValidForProcessing(sitesToCheck, regionsToCheck))
         {
             timer.Stop();
             return (int)timer.Elapsed.TotalSeconds;
@@ -47,13 +54,13 @@ public class MonitorSitesStatusService
         var checkedAt = DateTime.UtcNow;
 
         var tasks = new List<Task>();
-        foreach (var region in allRegions)
+        foreach (var region in regionsToCheck)
         {
-            tasks.Add(Task.Run(async () => await CheckSitesForRegion(region, allSites, checkedAt)));
+            tasks.Add(Task.Run(async () => await CheckSitesForRegion(region, sitesToCheck, checkedAt)));
         }
 
         await Task.WhenAll(tasks);
-        await UpdateCheckedAt(checkedAt);
+        await UpdateCheckedAt(checkedAt, sitesToCheck);
 
         timer.Stop();
         return (int)timer.Elapsed.TotalSeconds;
@@ -61,10 +68,8 @@ public class MonitorSitesStatusService
 
     private async Task CheckSitesForRegion(Region region, IEnumerable<Site> sites, DateTime checkedAt)
     {
-        var checks = new ConcurrentBag<Check>();
-
-        var maxSitesInQueue = int.Parse(_configuration["MAX_SITES_IN_QUEUE"]);
-        var throttler = new SemaphoreSlim(maxSitesInQueue, maxSitesInQueue);
+        var checks = new ConcurrentBag<Check>();        
+        var throttler = new SemaphoreSlim(_maxSitesInQueue, _maxSitesInQueue);
 
         var tasks = new List<Task>();
         foreach (var site in sites)
@@ -76,8 +81,7 @@ public class MonitorSitesStatusService
                 Debug.WriteLine($"Task {Task.CurrentId} enters the semaphore.Number = {throttler.CurrentCount}");
                 try
                 {
-                    //await Task.Delay(2000);
-                    var check = await _checkSiteService.CheckAsync(site, region, checkedAt);
+                    var check = await _checkSiteService.Check(site, region, checkedAt);
                     checks.Add(check);
                 }
                 finally
@@ -103,13 +107,13 @@ public class MonitorSitesStatusService
         await databaseStorage.AddChecksAsync(checks.ToList());
     }
 
-    private async Task UpdateCheckedAt(DateTime checkedAt)
+    private async Task UpdateCheckedAt(DateTime checkedAt, IEnumerable<Site> sitesToCheck)
     {
         using var serviceScope = _serviceScopeFactory.CreateScope();
 
         var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
-        await databaseStorage.UpdateCheckedAt(checkedAt);
+        await databaseStorage.UpdateCheckedAt(sitesToCheck, checkedAt);
     }
 
     private bool IsValidForProcessing(IEnumerable<Site> allSites, IEnumerable<Region> allRegions)

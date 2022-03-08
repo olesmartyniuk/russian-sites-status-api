@@ -1,10 +1,11 @@
 ﻿using RussianSitesStatus.Database.Models;
-using RussianSitesStatus.Models;
 
 namespace RussianSitesStatus.Services.Contracts
 {
     public interface ICheckSiteService
     {
-        Task<Check> CheckAsync(Site site, Region region, DateTime checkedAt);
+        Task<Check> Check(Site site, Region region, DateTime checkedAt);
+
+        Task<Site> CheckByUrl(string siteUrl, IEnumerable<Region> region);
     }
 }
