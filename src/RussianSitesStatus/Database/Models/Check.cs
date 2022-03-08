@@ -49,7 +49,7 @@ public class CheckConfiguration : IEntityTypeConfiguration<Check>
             .HasColumnName("checked_at")
             .IsRequired();
         builder
-            .HasIndex(p => p.CheckedAt);            
+            .HasIndex(p => p.CheckedAt);
         builder
             .Property(p => p.SpentTime)
             .HasColumnName("spent_time")
