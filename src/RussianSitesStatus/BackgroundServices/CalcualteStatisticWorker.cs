@@ -7,16 +7,16 @@ namespace RussianSitesStatus.BackgroundServices;
 public class CalcualteStatisticWorker : BackgroundService
 {
     private readonly ILogger<MonitorStatusWorker> _logger;
-    private readonly CalculateStatisticsService _calculateStatisticsService;
+    private readonly CalculateStatisticService _calculateStatisticService;
     private IConfiguration _configuration;
 
     public CalcualteStatisticWorker(
         ILogger<MonitorStatusWorker> logger,
-        CalculateStatisticsService calculateStatisticsService,
+        CalculateStatisticService calculateStatisticsService,
         IConfiguration configuration)
     {
         _logger = logger;
-        _calculateStatisticsService = calculateStatisticsService;
+        _calculateStatisticService = calculateStatisticsService;
         _configuration = configuration;
     }
 
@@ -36,7 +36,7 @@ public class CalcualteStatisticWorker : BackgroundService
                 var timer = new Stopwatch();
                 timer.Start();
 
-                await _calculateStatisticsService.CreateStatisticsAsync();
+                await _calculateStatisticService.CreateStatisticAsync();
 
                 timer.Stop();
                 spentTime = (int)timer.Elapsed.TotalSeconds;

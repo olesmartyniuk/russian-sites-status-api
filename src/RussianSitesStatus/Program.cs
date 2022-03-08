@@ -94,7 +94,7 @@ static void AddServices(WebApplicationBuilder builder)
 
     services.AddScoped<DatabaseStorage>();
     services.AddTransient<ISyncSitesService, SyncSitesDatabaseService>();
-    services.AddSingleton<CalculateStatisticsService>();
+    services.AddSingleton<CalculateStatisticService>();
 
     services.AddHostedService<MemoryDataFetcher>();
     services.AddHostedService<SyncSitesWorker>();

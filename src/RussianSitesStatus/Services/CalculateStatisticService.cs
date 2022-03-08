@@ -3,12 +3,12 @@ using RussianSitesStatus.Database.Models;
 
 namespace RussianSitesStatus.Services;
 
-public class CalculateStatisticsService
+public class CalculateStatisticService
 {
     private readonly ILogger<MonitorSitesStatusService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    public CalculateStatisticsService(
+    public CalculateStatisticService(
         IServiceScopeFactory serviceScopeFactory,
         ILogger<MonitorSitesStatusService> logger)
     {
@@ -16,16 +16,16 @@ public class CalculateStatisticsService
         _logger = logger;
     }
 
-    public async Task CreateStatisticsAsync()
+    public async Task CreateStatisticAsync()
     {
         using (var serviceScope = _serviceScopeFactory.CreateScope())
         {
             var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
-            var oldestDate = (await databaseStorage.GetOldestCheckSiteDate()).Date;
+            var oldestDate = (await databaseStorage.GetOldestCheckSiteDateAsync()).Date;
 
             var siteIds = await databaseStorage.GetUniqueSiteIdsAsync();
 
-            var statisticDate = oldestDate.AddDays(1);
+            var statisticDate = oldestDate;
             while (statisticDate.Date < DateTime.UtcNow.Date)
             {
                 foreach (var siteId in siteIds)

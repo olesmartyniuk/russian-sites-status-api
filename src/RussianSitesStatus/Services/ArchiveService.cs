@@ -25,14 +25,14 @@ public class ArchiveService
         {
             var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
-            var lastStatisticsDate = await databaseStorage.GetNewestStatistisDate(); //TODOVK: check if statistis exist per site
+            var lastStatisticsDate = await databaseStorage.GetNewestStatistisDateAsync(); //TODOVK: check if statistis exist per site
             if (lastStatisticsDate.Date < DateTime.UtcNow.Date)
             {
-                await databaseStorage.DeleteStatistis(lastStatisticsDate.Date.AddDays(-20));
+                await databaseStorage.DeleteStatistisAsync(lastStatisticsDate.Date.AddDays(-20));
             }
             else
             {
-                await databaseStorage.DeleteStatistis(DateTime.UtcNow.Date.AddDays(-20));
+                await databaseStorage.DeleteStatistisAsync(DateTime.UtcNow.Date.AddDays(-20));
             }
         }
     }

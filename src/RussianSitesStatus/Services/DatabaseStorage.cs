@@ -1,14 +1,11 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Npgsql.NameTranslation;
-using NpgsqlTypes;
 using RussianSitesStatus.Database;
 using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models.Dtos;
 using System.Data;
-using System.Data.SqlClient;
 
 namespace RussianSitesStatus.Services;
 
@@ -261,7 +258,7 @@ public class DatabaseStorage
         await _db.SaveChangesAsync();
     }
 
-    public async Task<DateTime> GetOldestCheckSiteDate()
+    public async Task<DateTime> GetOldestCheckSiteDateAsync()
     {
         var commandText = @"SELECT MIN(checked_at) FROM checks;";
 
@@ -302,7 +299,7 @@ public class DatabaseStorage
         await _db.SaveChangesAsync();
     }
 
-    public async Task DeleteStatistis(DateTime endDate)
+    public async Task DeleteStatistisAsync(DateTime endDate)
     {
         var commandText = @"DELETE FROM checks WHERE checked_at <= @end_date;";
 
@@ -310,7 +307,7 @@ public class DatabaseStorage
         await _db.Database.ExecuteSqlRawAsync(commandText, endDateParam);
     }
 
-    public async Task<DateTime> GetNewestStatistisDate()
+    public async Task<DateTime> GetNewestStatistisDateAsync()
     {
         var commandText = @"SELECT MAX(day) FROM ChecksStatistics;";
 
