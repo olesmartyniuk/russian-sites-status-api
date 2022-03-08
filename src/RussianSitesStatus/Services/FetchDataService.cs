@@ -25,7 +25,9 @@ namespace RussianSitesStatus.Services
                 var sitesDB = await databaseStorage
                     .GetAllSitesWithLastChecks();
 
-                var statuses = (await databaseStorage.GetAllStatuses())
+                var statuses = await databaseStorage.GetAllStatuses();
+
+                var statusesBySiteId = statuses
                     .ToDictionary(x => x.SiteId, y => y.Status);
 
                 var uptime = (await databaseStorage.GetAllUptime())
@@ -33,7 +35,7 @@ namespace RussianSitesStatus.Services
 
                 foreach (var siteDbItem in sitesDB)
                 {
-                    siteDetailsVMList.Add(GetSiteDetailsVM(siteDbItem, uptime, statuses));
+                    siteDetailsVMList.Add(GetSiteDetailsVM(siteDbItem, uptime, statusesBySiteId));
                 }
 
                 return siteDetailsVMList;
