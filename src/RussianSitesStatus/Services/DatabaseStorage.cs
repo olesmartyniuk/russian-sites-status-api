@@ -157,13 +157,16 @@ public class DatabaseStorage
         return statuses;
     }
 
-    public async Task UpdateCheckedAt(DateTime checkedAt)
+    public async Task UpdateCheckedAt(IEnumerable<Site> sitesToCheck, DateTime checkedAt)
     {
+        var siteIds = string.Join(",", sitesToCheck.Select(s => s.Id));
         var commandText = 
-            @"update 
+            @$"update 
                 sites 
               set 
-                checked_at = @CheckedAt";
+                checked_at = @CheckedAt
+              where
+                id in ({siteIds})";
  
         var checkedAtParam = new NpgsqlParameter("@CheckedAt", checkedAt);
         await _db.Database.ExecuteSqlRawAsync(commandText, checkedAtParam);
