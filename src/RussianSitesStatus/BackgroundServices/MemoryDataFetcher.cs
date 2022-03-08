@@ -46,7 +46,7 @@ public class MemoryDataFetcher : BackgroundService
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Unhandled exception while fetching statuses");
+                _logger.LogError(e, "Unhandled exception while synchronized data from DB");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(siteCheckInterval), stoppingToken);
