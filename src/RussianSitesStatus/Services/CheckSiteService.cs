@@ -73,6 +73,8 @@ public class CheckSiteService : ICheckSiteService
     public async Task<Site> CheckByUrl(string siteUrl, IEnumerable<Region> regions)
     {
         var checkedAt = DateTime.UtcNow;
+        var regionsById = regions
+            .ToDictionary(r => r.Id, r => r);
 
         var site = new Site
         {
@@ -94,6 +96,7 @@ public class CheckSiteService : ICheckSiteService
 
         foreach (var check in checks)
         {
+            check.Region = regionsById[check.RegionId];
             site.Checks.Add(check);
         }        
 
@@ -109,7 +112,6 @@ public class CheckSiteService : ICheckSiteService
             StatusCode = statusCode,
             SpentTime = spentTime,
             RegionId = region.Id,
-            Region = region,
             Status = GetStatus(statusCode)
         };        
     }
