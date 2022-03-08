@@ -71,9 +71,12 @@ public class DatabaseStorage
         return upTime;
     }
 
-    public async Task<IEnumerable<Site>> GetAllSites()
+    public async Task<IEnumerable<Site>> GetSites(int skip = 0, int take = int.MaxValue)
     {
         return await _db.Sites
+            .OrderBy(s => s.Id)
+            .Skip(skip)
+            .Take(take)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -137,33 +140,26 @@ public class DatabaseStorage
         var connection = _db.Database.GetDbConnection();
         var statuses = await connection.QueryAsync<StatusPerSiteDto>(
             @"select
-	            site_id as SiteId,
-	            min(sq.status) as Status
+               checks.site_id as SiteId,
+               min(checks.status) as Status
             from
-	            (
-	            select
-		            checked_at, site_id, status
-	            from
-		            checks
-	            where
-		            checked_at = (
-		            select
-			            max(checked_at)
-		            from
-			            checks)) as sq
+               checks 
+               join sites on checks.checked_at = sites.checked_at
             group by
-	            site_id,
-	            checked_at");
+               checks.site_id;");
         return statuses;
     }
 
-    public async Task UpdateCheckedAt(DateTime checkedAt)
+    public async Task UpdateCheckedAt(IEnumerable<Site> sitesToCheck, DateTime checkedAt)
     {
-        var commandText =
-            @"update 
+        var siteIds = string.Join(",", sitesToCheck.Select(s => s.Id));
+        var commandText = 
+            @$"update 
                 sites 
               set 
-                checked_at = @CheckedAt";
+                checked_at = @CheckedAt
+              where
+                id in ({siteIds})";
 
         var checkedAtParam = new NpgsqlParameter("@CheckedAt", checkedAt);
         await _db.Database.ExecuteSqlRawAsync(commandText, checkedAtParam);

@@ -42,7 +42,7 @@ public class MonitorStatusWorker : BackgroundService
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Unhandled exception while fetching statuses");
+                _logger.LogError(e, "Unhandled exception while monitoring sites");
             }
 
             var waitToNextIteration = siteCheckInterval - spentTime;

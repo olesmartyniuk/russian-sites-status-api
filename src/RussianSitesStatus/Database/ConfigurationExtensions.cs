@@ -13,7 +13,7 @@ public static class ConfigurationExtensions
         
         if (uri.Host != "localhost" && uri.Host != "127.0.0.1")
         {
-            connection += "sslmode=Require;Trust Server Certificate=true;";
+            connection += "sslmode=Require;Trust Server Certificate=true;Include Error Detail=true;";
         }
 
         return connection;
