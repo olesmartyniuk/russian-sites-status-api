@@ -40,12 +40,12 @@ public class MonitorSitesStatusService
         var timer = new Stopwatch();
         timer.Start();
 
-        var allSites = await databaseStorage
+        var sitesToCheck = await databaseStorage
             .GetSites(_sitesSkip, _sitesTake);
-        var allRegions = await databaseStorage
+        var regionsToCheck = await databaseStorage
             .GetRegions(true);
 
-        if (!IsValidForProcessing(allSites, allRegions))
+        if (!IsValidForProcessing(sitesToCheck, regionsToCheck))
         {
             timer.Stop();
             return (int)timer.Elapsed.TotalSeconds;
@@ -54,13 +54,13 @@ public class MonitorSitesStatusService
         var checkedAt = DateTime.UtcNow;
 
         var tasks = new List<Task>();
-        foreach (var region in allRegions)
+        foreach (var region in regionsToCheck)
         {
-            tasks.Add(Task.Run(async () => await CheckSitesForRegion(region, allSites, checkedAt)));
+            tasks.Add(Task.Run(async () => await CheckSitesForRegion(region, sitesToCheck, checkedAt)));
         }
 
         await Task.WhenAll(tasks);
-        await UpdateCheckedAt(checkedAt);
+        await UpdateCheckedAt(checkedAt, sitesToCheck);
 
         timer.Stop();
         return (int)timer.Elapsed.TotalSeconds;
@@ -107,13 +107,13 @@ public class MonitorSitesStatusService
         await databaseStorage.AddChecksAsync(checks.ToList());
     }
 
-    private async Task UpdateCheckedAt(DateTime checkedAt)
+    private async Task UpdateCheckedAt(DateTime checkedAt, IEnumerable<Site> sitesToCheck)
     {
         using var serviceScope = _serviceScopeFactory.CreateScope();
 
         var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
-        await databaseStorage.UpdateCheckedAt(checkedAt);
+        await databaseStorage.UpdateCheckedAt(sitesToCheck, checkedAt);
     }
 
     private bool IsValidForProcessing(IEnumerable<Site> allSites, IEnumerable<Region> allRegions)
