@@ -11,6 +11,9 @@ public class MonitorSitesStatusService
     private readonly ILogger<MonitorSitesStatusService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private IConfiguration _configuration;
+    private readonly int _maxSitesInQueue;
+    private readonly int _sitesSkip;
+    private readonly int _sitesTake;
 
     public MonitorSitesStatusService(                
         ICheckSiteService checkSiteService,
@@ -22,6 +25,10 @@ public class MonitorSitesStatusService
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
         _configuration = configuration;
+
+        _maxSitesInQueue = int.Parse(_configuration["MAX_SITES_IN_QUEUE"]);
+        _sitesSkip = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[0]);
+        _sitesTake = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[1]);
     }
 
     public async Task<int> MonitorAllAsync()
@@ -34,7 +41,7 @@ public class MonitorSitesStatusService
         timer.Start();
 
         var allSites = await databaseStorage
-            .GetAllSites();
+            .GetSites(_sitesSkip, _sitesTake);
         var allRegions = await databaseStorage
             .GetRegions(true);
 
@@ -61,10 +68,8 @@ public class MonitorSitesStatusService
 
     private async Task CheckSitesForRegion(Region region, IEnumerable<Site> sites, DateTime checkedAt)
     {
-        var checks = new ConcurrentBag<Check>();
-
-        var maxSitesInQueue = int.Parse(_configuration["MAX_SITES_IN_QUEUE"]);
-        var throttler = new SemaphoreSlim(maxSitesInQueue, maxSitesInQueue);
+        var checks = new ConcurrentBag<Check>();        
+        var throttler = new SemaphoreSlim(_maxSitesInQueue, _maxSitesInQueue);
 
         var tasks = new List<Task>();
         foreach (var site in sites)
@@ -76,7 +81,6 @@ public class MonitorSitesStatusService
                 Debug.WriteLine($"Task {Task.CurrentId} enters the semaphore.Number = {throttler.CurrentCount}");
                 try
                 {
-                    //await Task.Delay(2000);
                     var check = await _checkSiteService.Check(site, region, checkedAt);
                     checks.Add(check);
                 }
