@@ -68,9 +68,12 @@ public class DatabaseStorage
         return upTime;
     }
 
-    public async Task<IEnumerable<Site>> GetAllSites()
+    public async Task<IEnumerable<Site>> GetSites(int skip = 0, int take = int.MaxValue)
     {
         return await _db.Sites
+            .OrderBy(s => s.Id)
+            .Skip(skip)
+            .Take(take)
             .AsNoTracking()
             .ToListAsync();
     }
