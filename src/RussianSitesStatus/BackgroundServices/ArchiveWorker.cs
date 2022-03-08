@@ -43,7 +43,7 @@ public class ArchiveWorker : BackgroundService
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Unhandled exception while fetching statuses");
+                _logger.LogError(e, "Unhandled exception while archiving data");
             }
             _logger.LogInformation($"{nameof(ArchiveWorker)}: executed iteration in {spentTime} seconds.");
 
