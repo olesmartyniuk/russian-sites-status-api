@@ -29,7 +29,13 @@ public class CheckSiteService : ICheckSiteService
         };
         var handler = new HttpClientHandler
         {
-            Proxy = proxy
+            Proxy = proxy,
+            ClientCertificateOptions = ClientCertificateOption.Manual,
+            ServerCertificateCustomValidationCallback =
+                (httpRequestMessage, cert, cetChain, policyErrors) =>
+                {
+                    return true;
+                }
         };
         var client = new HttpClient(handler);
         client.Timeout = _timeout;
