@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Options;
-using RussianSitesStatus.Configuration;
 using RussianSitesStatus.Services.Contracts;
 
 namespace RussianSitesStatus.BackgroundServices;
@@ -40,7 +38,7 @@ public class SyncSitesWorker : BackgroundService
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Unhandled exception while fetching statuses");
+                _logger.LogError(e, "Unhandled exception while synchronizing sites lists");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(sitesSyncInterval), stoppingToken);
