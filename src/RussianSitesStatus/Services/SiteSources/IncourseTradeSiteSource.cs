@@ -13,34 +13,7 @@ namespace RussianSitesStatus.Services
             var response = await client.GetAsync(request);
 
             var allSites = JsonSerializer.Deserialize<IEnumerable<IncourseSiteResponce>>(response.Content);
-            
-            var relevantSites = allSites
-                .Where(s => AsBoolean(s.atack) == true)
-                .ToList();
-
-            const int MaxNumberOfSites = 100;
-            var notRelevantSites = allSites
-                .Where(s => AsBoolean(s.atack) == false)
-                .Take(MaxNumberOfSites - relevantSites.Count);
-
-            relevantSites.AddRange(notRelevantSites);
-            
-            return relevantSites.Select(s => s.url);
-        }
-
-        private bool AsBoolean(object atack)
-        {
-            if (bool.TryParse(atack.ToString(), out var boolResult))
-            {
-                return boolResult;
-            }
-
-            if (int.TryParse(atack.ToString(), out var intResult))
-            {
-                return intResult == 1;
-            }
-
-            return false;
+            return allSites.Select(s => s.url);
         }
 
         private class IncourseSiteResponce
