@@ -258,12 +258,12 @@ public class DatabaseStorage
         await _db.SaveChangesAsync();
     }
 
-    public async Task<DateTime> GetOldestCheckSiteDateAsync()
+    public async Task<DateTime?> GetOldestCheckSiteDateAsync()
     {
         var commandText = @"SELECT MIN(checked_at) FROM checks;";
 
         var connection = _db.Database.GetDbConnection();
-        return await connection.QuerySingleAsync<DateTime>(commandText);
+        return await connection.QuerySingleAsync<DateTime?>(commandText);
     }
 
     public async Task<IEnumerable<int>> GetUniqueSiteIdsAsync()

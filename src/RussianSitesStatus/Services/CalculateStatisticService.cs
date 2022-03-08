@@ -5,12 +5,12 @@ namespace RussianSitesStatus.Services;
 
 public class CalculateStatisticService
 {
-    private readonly ILogger<MonitorSitesStatusService> _logger;
+    private readonly ILogger<CalculateStatisticService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public CalculateStatisticService(
         IServiceScopeFactory serviceScopeFactory,
-        ILogger<MonitorSitesStatusService> logger)
+        ILogger<CalculateStatisticService> logger)
     {
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
@@ -21,7 +21,13 @@ public class CalculateStatisticService
         using (var serviceScope = _serviceScopeFactory.CreateScope())
         {
             var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
-            var oldestDate = (await databaseStorage.GetOldestCheckSiteDateAsync()).Date;
+            var oldestDateTime = await databaseStorage.GetOldestCheckSiteDateAsync();
+            if (!oldestDateTime.HasValue)
+            {
+                _logger.LogInformation("There is no any checks to procces.");
+                return;
+            }
+            var oldestDate = oldestDateTime.Value.Date;
 
             var siteIds = await databaseStorage.GetUniqueSiteIdsAsync();
 
