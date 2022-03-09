@@ -18,48 +18,49 @@ public class CalculateStatisticService
 
     public async Task CreateStatisticAsync()
     {
-        using (var serviceScope = _serviceScopeFactory.CreateScope())
+        using var serviceScope = _serviceScopeFactory.CreateScope();
+        var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+
+        var sitesWithDate = await databaseStorage
+            .GetSitesWithDateToAgregateStat();
+
+        if (sitesWithDate.Count() == 0)
         {
-            var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
-            var oldestDateTime = await databaseStorage.GetOldestCheckSiteDateAsync();
-            if (!oldestDateTime.HasValue)
-            {
-                _logger.LogInformation("There is no any checks to procces.");
-                return;
-            }
+            _logger.LogInformation("There is no any checks to procces.");
+            return;
+        }
 
-            var statisticDate = oldestDateTime.Value.Date;
-            while (statisticDate.Date < DateTime.UtcNow.Date)
+        foreach (var siteWithDate in sitesWithDate)
+        {
+            try
             {
-                var siteIds = await databaseStorage.GetUniqueSiteIdsAsync(statisticDate);
-                foreach (var siteId in siteIds)
+                var statistics = await databaseStorage
+                    .CalculateStatisticAsync(
+                        siteWithDate.SiteId,
+                        siteWithDate.AgregateFor);
+
+                var newCheck = new ChecksStatistics
                 {
-                    try
-                    {
-                        if (await databaseStorage.HasStatisticsAsync(siteId, statisticDate))
-                        {
-                            continue;
-                        }
+                    SiteId = siteWithDate.SiteId,
+                    Day = siteWithDate.AgregateFor,
+                    Data = JsonConvert.SerializeObject(statistics)
+                };
 
-                        var statistics = await databaseStorage.CalculateStatisticAsync(siteId, statisticDate);
-
-                        var newChec = new ChecksStatistics
-                        {
-                            SiteId = siteId,
-                            Day = statisticDate,
-                            Data = JsonConvert.SerializeObject(statistics)
-                        };
-
-                        await databaseStorage.AddChecksStatisticsAsync(newChec);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Siteid = {siteId}"); ;
-                    }
-                }
-
-                statisticDate = statisticDate.AddDays(1);
+                await databaseStorage.AddChecksStatisticsAsync(newCheck);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"SiteId={siteWithDate.SiteId}, AgregateFor={siteWithDate.AgregateFor}"); ;
             }
         }
+
+        var uniqSitesCount = sitesWithDate
+            .Select(s => s.SiteId)
+            .Distinct()
+            .Count();
+        var uniqDates = sitesWithDate
+            .Select(s => s.AgregateFor.ToString("MM-dd"))
+            .Distinct();
+        _logger.LogInformation($"Processed {uniqSitesCount} sites for days [{string.Join(",", uniqDates)}]");
     }
 }

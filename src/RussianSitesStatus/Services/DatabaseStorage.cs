@@ -266,15 +266,28 @@ public class DatabaseStorage
         return await connection.QuerySingleAsync<DateTime?>(commandText);
     }
 
-    public async Task<IEnumerable<int>> GetUniqueSiteIdsAsync(DateTime day)
+    public async Task<IEnumerable<SiteAgregateFor>> GetSitesWithDateToAgregateStat()
     {
-        var commandText = @"SELECT DISTINCT site_id FROM checks WHERE CAST(checked_at AS date) = @day;";
-
-        var parameters = new DynamicParameters();
-        parameters.Add("@day", day, DbType.Date);
+        var commandText = @"
+            SELECT DISTINCT
+	            ch.site_id AS SiteId, 
+	            CAST(ch.checked_at AS DATE) AS AgregateFor
+            FROM 
+	            checks ch 
+            WHERE 
+	            NOT EXISTS (
+		            SELECT 
+			            cs.id 
+		            FROM 
+			            checks_statistics cs
+		            WHERE 
+			            ch.site_id = cs.site_id AND 
+			            CAST(ch.checked_at AS DATE) = cs.day
+	            ) 
+	            AND CAST(ch.checked_at AS DATE) <> CAST(now() AS DATE);";       
 
         var connection = _db.Database.GetDbConnection();
-        return await connection.QueryAsync<int>(commandText, parameters);
+        return await connection.QueryAsync<SiteAgregateFor>(commandText);
     }
 
     public async Task<bool> HasStatisticsAsync(int siteId, DateTime date)
@@ -282,7 +295,7 @@ public class DatabaseStorage
         return await _db.ChecksStatistics.AnyAsync(cs => cs.SiteId == siteId && cs.Day == date);
     }
 
-    public async Task<IEnumerable<StatisticInfo>> CalculateStatisticAsync(int siteId, DateTime date)
+    public async Task<IEnumerable<StatisticInfo>> CalculateStatisticAsync(long siteId, DateTime date)
     {
         var commandText = @"SELECT * FROM fn_calculate_statistic_per_day(@siteId, @date)";
 

@@ -17,3 +17,8 @@ public class StatisticInfo
     public int down_number { get; set; }
 }
 
+public class SiteAgregateFor
+{
+    public long SiteId { get; set; }
+    public DateTime AgregateFor { get; set; }
+}
