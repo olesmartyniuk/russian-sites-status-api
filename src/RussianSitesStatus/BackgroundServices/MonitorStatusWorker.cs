@@ -7,6 +7,8 @@ public class MonitorStatusWorker : BackgroundService
     private readonly ILogger<MonitorStatusWorker> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private IConfiguration _configuration;
+    private readonly int _siteCheckInterval;
+    private readonly int _siteCheckPauseBefore;
 
     public MonitorStatusWorker(
         ILogger<MonitorStatusWorker> logger,
@@ -16,17 +18,18 @@ public class MonitorStatusWorker : BackgroundService
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
         _configuration = configuration;
+        _siteCheckInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
+        _siteCheckPauseBefore = int.Parse(_configuration["SITE_CHECK_PAUSE_BEFORE_START"]);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        var siteCheckInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
-        if (siteCheckInterval <= 0)
+    {        
+        if (_siteCheckInterval <= 0)
         {
             return;
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+        await Task.Delay(TimeSpan.FromSeconds(_siteCheckPauseBefore), stoppingToken);
 
         var spentTime = 0;
         while (!stoppingToken.IsCancellationRequested)
@@ -45,7 +48,7 @@ public class MonitorStatusWorker : BackgroundService
                 _logger.LogError(e, "Unhandled exception while monitoring sites");
             }
 
-            var waitToNextIteration = siteCheckInterval - spentTime;
+            var waitToNextIteration = _siteCheckInterval - spentTime;
             if (waitToNextIteration > 0)
             {
                 await Task.Delay(TimeSpan.FromSeconds(waitToNextIteration), stoppingToken);
@@ -53,7 +56,7 @@ public class MonitorStatusWorker : BackgroundService
             }
             else
             {
-                _logger.LogWarning($"Monitoring takes: {spentTime} seconds. It's more than one iteration({ siteCheckInterval } seconds) should be.");
+                _logger.LogWarning($"Monitoring takes: {spentTime} seconds. It's more than one iteration({ _siteCheckInterval } seconds) should be.");
             }
         }
     }
