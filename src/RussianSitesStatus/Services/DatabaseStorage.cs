@@ -323,11 +323,11 @@ public class DatabaseStorage
         await _db.Database.ExecuteSqlRawAsync(commandText, endDateParam);
     }
 
-    public async Task<DateTime> GetNewestStatistisDateAsync()
+    public async Task<DateTime?> GetNewestStatistisDateAsync()
     {
-        var commandText = @"SELECT MAX(day) FROM ChecksStatistics;";
+        var commandText = @"SELECT MAX(day) FROM checks_statistics;";
 
         var connection = _db.Database.GetDbConnection();
-        return await connection.QuerySingleAsync<DateTime>(commandText);
+        return await connection.QuerySingleAsync<DateTime?>(commandText);
     }
 }
