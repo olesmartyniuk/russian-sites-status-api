@@ -317,7 +317,7 @@ public class DatabaseStorage
 
     public async Task DeleteStatistisAsync(DateTime endDate)
     {
-        var commandText = @"DELETE FROM checks WHERE checked_at <= @end_date;";
+        var commandText = @"DELETE FROM checks WHERE checked_at < @end_date;";
 
         var endDateParam = new NpgsqlParameter("@end_date", endDate);
         await _db.Database.ExecuteSqlRawAsync(commandText, endDateParam);
