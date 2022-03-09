@@ -34,9 +34,9 @@ public class ArchiveService
 
             var oldestChecksDate = oldestChecksDateTime.Value.Date;
             var lastStatisticsDate = lastStatisticsDateTime.Value.Date;
-            if (oldestChecksDate < lastStatisticsDate.AddDays(-1))
+            if (oldestChecksDate < lastStatisticsDate)
             {
-                await databaseStorage.DeleteStatistisAsync(lastStatisticsDate.AddDays(-1));
+                await databaseStorage.DeleteStatistisAsync(lastStatisticsDate);
             }
         }
     }
