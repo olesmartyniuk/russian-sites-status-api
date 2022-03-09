@@ -100,7 +100,7 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddHostedService<SyncSitesWorker>();
     services.AddHostedService<MonitorStatusWorker>();
     services.AddHostedService<CalcualteStatisticWorker>();
-    //services.AddHostedService<ArchiveWorker>(); //TODOVK: needs improvement, do not review
+    services.AddHostedService<ArchiveWorker>(); //TODOVK: needs improvement, do not review
 
     builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
     builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
