@@ -10,7 +10,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6CD3E5D6-63B3-4F6A-849E-C9A258581D58}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		.github\workflows\deploy-api.yml = .github\workflows\deploy-api.yml
+		.github\workflows\deploy-worker-1.yml = .github\workflows\deploy-worker-1.yml
+		.github\workflows\deploy-worker-2.yml = .github\workflows\deploy-worker-2.yml
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProxy", "src\TestProxy\TestProxy.csproj", "{168E2E4F-4FE2-41AD-B788-5582EDC0BB99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +31,10 @@ Global
 		{96694124-181B-4C3B-A398-6A4602EB81F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96694124-181B-4C3B-A398-6A4602EB81F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96694124-181B-4C3B-A398-6A4602EB81F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{168E2E4F-4FE2-41AD-B788-5582EDC0BB99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{168E2E4F-4FE2-41AD-B788-5582EDC0BB99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{168E2E4F-4FE2-41AD-B788-5582EDC0BB99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{168E2E4F-4FE2-41AD-B788-5582EDC0BB99}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

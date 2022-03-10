@@ -15,9 +15,8 @@ public class SyncSitesBackgroundService : BackgroundService
         IServiceProvider serviceProvider)
     {
         _logger = logger;
-        _syncSitesService = syncSitesService;
-        _syncSitesConfiguration = serviceProvider
-            .GetRequiredService<IOptions<SyncSitesConfiguration>>().Value;
+        _serviceFactory = serviceFactory;
+        _configuration = configuration;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,10 +31,10 @@ public class SyncSitesBackgroundService : BackgroundService
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Unhandled exception while fetching statuses");
+                _logger.LogError(e, "Unhandled exception while synchronizing sites lists");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(_syncSitesConfiguration.WaitToNextCheckSeconds), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(sitesSyncInterval), stoppingToken);
         }
     }
 }

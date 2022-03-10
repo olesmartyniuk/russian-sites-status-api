@@ -1,66 +1,114 @@
-using RussianSitesStatus.Services;
-using RussianSitesStatus.Models;
-using RussianSitesStatus.BackgroundServices;
-using RussianSitesStatus.Services.Contracts;
-using RussianSitesStatus.Configuration;
-using System.Reflection;
-using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.OpenApi.Models;
 using RussianSitesStatus.Auth;
+using RussianSitesStatus.BackgroundServices;
+using RussianSitesStatus.Configuration;
+using RussianSitesStatus.Database;
+using RussianSitesStatus.Models;
+using RussianSitesStatus.Services;
+using RussianSitesStatus.Services.Contracts;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-AddService(builder.Services);
+AddServices(builder);
+AddSwagger(builder);
 AddControllers(builder);
-AddSwagger(builder.Services);
 AddAuthentication(builder);
-AddCors(builder.Services);
+AddCors(builder);
 
-builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
-
-builder.WebHost.UseKestrel((context, options) =>
-{
-    var port = Environment.GetEnvironmentVariable("PORT");
-    if (!string.IsNullOrEmpty(port))
-    {
-        options.ListenAnyIP(int.Parse(port));
-    }
-});
+ConfigureKestrel(builder);
 
 // Configure the HTTP request pipeline.
 var app = builder.Build();
-app.UseCors("CorsPolicy");
-app.UseSwagger();
 
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mordor sites status API");
-    c.RoutePrefix = string.Empty;
-    c.DocumentTitle = "Mordor sites status API";
-});
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
+ConfigureHttpPipeline(app);
+
+CreateDbIfNotExist(app);
+
 app.Run();
 
 
-static void AddService(IServiceCollection services)
+static void CreateDbIfNotExist(WebApplication app)
 {
-    services.AddSingleton<StatusCakeService>();
-    services.AddSingleton<Storage<Site>>();
-    services.AddSingleton<Storage<SiteDetails>>();
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
 
-    services.AddSingleton<UpCheckService>();
-    services.AddSingleton<SyncSitesService>();
-    services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
+    try
+    {
+        var context = services.GetRequiredService<ApplicationContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
 
-    services.AddHostedService<StatusFetcherBackgroundService>();
-    services.AddHostedService<SyncSitesBackgroundService>();
+        var migrations = context.Database.GetPendingMigrations().ToList();
+        if (migrations.Any())
+        {
+            logger.LogInformation("Service is going to run migrations: {migrations}.", string.Join(", ", migrations));
+        }
+        else
+        {
+            logger.LogTrace("There are no pending migrations");
+        }
+        context.Database.Migrate();
+        logger.LogTrace("The database has been successfully migrated.");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred creating the DB.");
+    }
 }
 
-static void AddCors(IServiceCollection services)
+
+static void AddServices(WebApplicationBuilder builder)
 {
-    services.AddCors(options =>
+    var services = builder.Services;
+
+    services.AddDbContext<ApplicationContext>(options =>
+    {
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.CommandExecuting, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.CommandExecuted, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.ConnectionOpening, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.ConnectionOpened, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.ConnectionClosing, LogLevel.Trace)));
+        options.ConfigureWarnings(c => c.Log((RelationalEventId.ConnectionClosed, LogLevel.Trace)));
+
+        options.UseNpgsql(builder.Configuration.GetConnectionString(),
+                optionsAction =>
+                {
+                    optionsAction.EnableRetryOnFailure(2, TimeSpan.FromSeconds(5), null);
+                }
+            );
+    }, ServiceLifetime.Scoped);
+
+    services.AddSingleton<InMemoryStorage<SiteVM>>();
+    services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
+    services.AddSingleton<BaseInMemoryStorage<RegionVM>>();
+
+    services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
+    services.AddSingleton<IFetchDataService, FetchDataService>();
+    services.AddTransient<MonitorSitesStatusService>();
+    services.AddTransient<ICheckSiteService, CheckSiteService>();
+    services.AddSingleton<ArchiveService>();
+
+    services.AddScoped<DatabaseStorage>();
+    services.AddTransient<ISyncSitesService, SyncSitesDatabaseService>();
+    services.AddSingleton<CalculateStatisticService>();
+
+    services.AddHostedService<MemoryDataFetcher>();
+    services.AddHostedService<SyncSitesWorker>();
+    services.AddHostedService<MonitorStatusWorker>();
+    services.AddHostedService<CalcualteStatisticWorker>();
+    services.AddHostedService<ArchiveWorker>(); //TODOVK: needs improvement, do not review
+
+    builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
+    builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
+}
+
+static void AddCors(WebApplicationBuilder builder)
+{
+    builder.Services.AddCors(options =>
     {
         options.AddPolicy("CorsPolicy",
             builder => builder
@@ -70,9 +118,9 @@ static void AddCors(IServiceCollection services)
     });
 }
 
-static void AddSwagger(IServiceCollection services)
+static void AddSwagger(WebApplicationBuilder builder)
 {
-    services.AddSwaggerGen(c =>
+    builder.Services.AddSwaggerGen(c =>
     {
         var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -102,4 +150,32 @@ static void AddControllers(WebApplicationBuilder builder)
 {
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+}
+
+void ConfigureKestrel(WebApplicationBuilder builder)
+{
+    builder.WebHost.UseKestrel((context, options) =>
+    {
+        var port = Environment.GetEnvironmentVariable("PORT");
+        if (!string.IsNullOrEmpty(port))
+        {
+            options.ListenAnyIP(int.Parse(port));
+        }
+    });
+}
+
+void ConfigureHttpPipeline(WebApplication app)
+{
+    app.UseCors("CorsPolicy");
+    app.UseSwagger();
+
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mordor sites status API");
+        c.RoutePrefix = string.Empty;
+        c.DocumentTitle = "Mordor sites status API";
+    });
+    app.UseHttpsRedirection();
+    app.UseAuthorization();
+    app.MapControllers();
 }
