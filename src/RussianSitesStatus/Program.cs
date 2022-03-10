@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi.Models;
@@ -104,6 +105,12 @@ static void AddServices(WebApplicationBuilder builder)
 
     builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
     builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
+
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+    });
 }
 
 static void AddCors(WebApplicationBuilder builder)
@@ -166,6 +173,7 @@ void ConfigureKestrel(WebApplicationBuilder builder)
 
 void ConfigureHttpPipeline(WebApplication app)
 {
+    app.UseResponseCompression();
     app.UseCors("CorsPolicy");
     app.UseSwagger();
 
