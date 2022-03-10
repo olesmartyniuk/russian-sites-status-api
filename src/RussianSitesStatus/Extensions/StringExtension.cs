@@ -26,4 +26,12 @@ public static class StringExtension
 
         return name;
     }
+
+    public static string NormalizeSiteUrl(this string url)
+    {
+        return new UriBuilder(url)
+            .Uri
+            .ToString()
+            .ToLower();
+    }
 }

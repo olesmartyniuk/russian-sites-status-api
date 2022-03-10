@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RussianSitesStatus.Auth;
+using RussianSitesStatus.Database.Models;
+using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Services;
@@ -12,20 +14,15 @@ namespace RussianSitesStatus.Controllers;
 [ApiController]
 public class SiteController : ControllerBase
 {
-    private readonly Storage<Site> _liteStatusStorage;
-    private readonly Storage<SiteDetails> _fullStatusStorage;
-    private readonly UpCheckService _upCheckService;
     private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
     private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
     private readonly DatabaseStorage _databaseStorage;
     private readonly ICheckSiteService _checkSiteService;
 
-    public SiteController(Storage<Site> liteStatusStorage, Storage<SiteDetails> fullStatusStorage, UpCheckService upCheckService)
     public SiteController(InMemoryStorage<SiteVM> liteStatusStorage, InMemoryStorage<SiteDetailsVM> fullStatusStorage, DatabaseStorage databaseStorage, ICheckSiteService checkSiteService)
     {
         _liteStatusStorage = liteStatusStorage;
         _fullStatusStorage = fullStatusStorage;
-        _upCheckService = upCheckService;
         _databaseStorage = databaseStorage;
         _checkSiteService = checkSiteService;
     }
@@ -36,7 +33,6 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://api.mordor-sites-status.info/api/sites
     ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites
     ///
     /// </remarks>    
@@ -44,7 +40,7 @@ public class SiteController : ControllerBase
     /// <response code="200">List of sites</response>
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites")]
-    public ActionResult<List<Site>> GetAllSites()
+    public ActionResult<List<SiteVM>> GetAll()
     {
         var result = _liteStatusStorage
             .GetAll()
@@ -59,7 +55,6 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://api.mordor-sites-status.info/api/sites/2876347
     ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites/2876347
     ///
     /// </remarks>    
@@ -69,7 +64,6 @@ public class SiteController : ControllerBase
     /// <response code="404">Site not found</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/{id}")]
-    public ActionResult<SiteDetails> GetSite(string id)
     public ActionResult<SiteDetailsVM> Get(long id)
     {
         var result = _fullStatusStorage.Get(id);
@@ -88,7 +82,6 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://api.mordor-sites-status.info/api/sites/search?text=ya.ru
     ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites/search?text=ya.ru
     ///
     /// </remarks>    
@@ -98,7 +91,7 @@ public class SiteController : ControllerBase
     /// <response code="400">Bad request</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/search")]
-    public ActionResult<IEnumerable<SiteDetails>> Search([FromQuery] string text)
+    public ActionResult<IEnumerable<SiteDetailsVM>> Search([FromQuery] string text)
     {
         if (string.IsNullOrEmpty(text) | text.Length < 3)
         {
@@ -115,21 +108,26 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    POST https://api.mordor-sites-status.info/api/sites/ya.ru
     ///    POST https://dev-russian-sites-status-api.herokuapp.com/api/sites/ya.ru
     ///
     /// </remarks>    
     /// <param name="siteUrl">Site URL to monitor</param>
     /// <response code="201">Created</response>
+    /// <response code="400">Bad request</response> 
     /// <response code="401">Unauthorized</response> 
+    /// <response code="409">Conflict</response> 
     /// <response code="500">Internal server error</response> 
     [HttpPost("api/sites/{siteUrl}")]
     [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
-    public async Task<ActionResult> AddNewSiteAsync([FromRoute]string siteUrl)
-    [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
     public async Task<ActionResult> Add([FromRoute()]string siteUrl)
     {
-        await _upCheckService.AddUptimeCheckAsync(siteUrl, new List<string> { Tag.CustomSite });
+        siteUrl = HttpUtility
+            .UrlDecode(siteUrl)
+            .NormalizeSiteUrl();
+        if (siteUrl.Length < 3)
+        {
+            return BadRequest("Site URL should be at least 3 symbols");
+        }
 
         var originalSite = await _databaseStorage.GetSiteByUrl(siteUrl);
         if (originalSite != null)
