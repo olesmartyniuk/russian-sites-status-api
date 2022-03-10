@@ -33,7 +33,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites
+    ///    GET https://api.mordor-sites-status.info/api/sites
     ///
     /// </remarks>    
     /// <returns>List of sites</returns>
@@ -55,7 +55,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites/2876347
+    ///    GET https://api.mordor-sites-status.info/api/sites/2876347
     ///
     /// </remarks>    
     /// <param name="id">Site id, integer number</param>
@@ -82,7 +82,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites/search?text=ya.ru
+    ///    GET https://api.mordor-sites-status.info/api/sites/search?text=ya.ru
     ///
     /// </remarks>    
     /// <param name="text">Text, minimum 3 symbols</param>
@@ -108,7 +108,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    POST https://dev-russian-sites-status-api.herokuapp.com/api/sites/ya.ru
+    ///    POST https://api.mordor-sites-status.info/api/sites/ya.ru
     ///
     /// </remarks>    
     /// <param name="siteUrl">Site URL to monitor</param>
@@ -153,7 +153,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    DELETE https://dev-russian-sites-status-api.herokuapp.com/api/sites/82197
+    ///    DELETE https://api.mordor-sites-status.info/api/sites/82197
     ///
     /// </remarks>    
     /// <param name="siteId">Site Id to remove</param>
@@ -182,7 +182,7 @@ public class SiteController : ControllerBase
     /// <remarks>
     /// Sample request:
     ///
-    ///    GET https://dev-russian-sites-status-api.herokuapp.com/api/sites/search?text=ya.ru
+    ///    GET https://api.mordor-sites-status.info/api/sites/search?text=ya.ru
     ///
     /// </remarks>    
     /// <param name="siteUrl">Site url with protocol</param>
