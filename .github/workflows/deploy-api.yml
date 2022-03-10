@@ -34,8 +34,8 @@ jobs:
     - name: Build and push
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: heroku container:push -a dev-russian-sites-status-api web 
+      run: heroku container:push -a dev-mss-api web 
     - name: Release
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: heroku container:release -a dev-russian-sites-status-api web 
+      run: heroku container:release -a dev-mss-api web 
