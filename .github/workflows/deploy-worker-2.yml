@@ -1,9 +1,9 @@
-name: Deploy to Heroku Dev
+name: Deploy Worker 2
 
 on:
   push:
     branches: 
-    - develop
+    - master
 
 jobs:
   build:
