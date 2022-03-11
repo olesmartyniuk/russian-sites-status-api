@@ -10,12 +10,19 @@ public class CheckSiteService : ICheckSiteService
 {
     private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
     private readonly ILogger<CheckSiteService> _logger;
+    private readonly int _reservedTimeForExecutionInMilliseconds;
 
+    private readonly IConfiguration _configuration;
     private static readonly ConcurrentDictionary<string, HttpClient> HttpClientsByRegion = new();
 
-    public CheckSiteService(ILogger<CheckSiteService> logger)
+    public CheckSiteService(ILogger<CheckSiteService> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
+        var sitesTake = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[1]);
+        var monitorWorkerInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
+
+        _reservedTimeForExecutionInMilliseconds = (int)(TimeSpan.FromSeconds(monitorWorkerInterval - 20).TotalMilliseconds / sitesTake);
     }
 
     private HttpClient CreateHttpClient(Region region)
@@ -71,8 +78,16 @@ public class CheckSiteService : ICheckSiteService
         finally
         {
             timer.Stop();
+            var timeThatLeft = _reservedTimeForExecutionInMilliseconds - (int)timer.Elapsed.TotalMilliseconds;
+
+            if (timeThatLeft > 0)
+            {
+                await Task.Delay(timeThatLeft);
+            }
+
             newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds, checkedAt);
         }
+
         return newCheck;
     }
 
@@ -104,7 +119,7 @@ public class CheckSiteService : ICheckSiteService
         {
             check.Region = regionsById[check.RegionId];
             site.Checks.Add(check);
-        }        
+        }
 
         return site;
     }
@@ -119,9 +134,9 @@ public class CheckSiteService : ICheckSiteService
             SpentTime = spentTime,
             RegionId = region.Id,
             Status = GetStatus(statusCode)
-        };        
+        };
     }
-    
+
     private CheckStatus GetStatus(int statusCode)
     {
         var status = statusCode switch
