@@ -78,14 +78,13 @@ public class CheckSiteService : ICheckSiteService
         finally
         {
             timer.Stop();
-            var timeThatLeft = _reservedTimeForExecutionInMilliseconds - (int)timer.Elapsed.TotalMilliseconds;
-
-            if (timeThatLeft > 0)
-            {
-                await Task.Delay(timeThatLeft);
-            }
-
             newCheck = BuildCheck(statusCode, site, region, (int)timer.Elapsed.TotalSeconds, checkedAt);
+        }
+
+        var timeThatLeft = _reservedTimeForExecutionInMilliseconds - (int)timer.Elapsed.TotalMilliseconds;
+        if (timeThatLeft > 0)
+        {
+            await Task.Delay(timeThatLeft);
         }
 
         return newCheck;
