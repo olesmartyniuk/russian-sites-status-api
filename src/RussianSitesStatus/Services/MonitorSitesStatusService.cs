@@ -14,7 +14,7 @@ public class MonitorSitesStatusService
     private readonly int _maxSitesInQueue;
     private readonly int _sitesSkip;
     private readonly int _sitesTake;
-    private readonly TimeSpan _reservedTimeForExecutionInMilliseconds;
+    private readonly TimeSpan _reservedTimeForExecution;
 
     public MonitorSitesStatusService(
         ICheckSiteService checkSiteService,
@@ -32,7 +32,7 @@ public class MonitorSitesStatusService
         _sitesTake = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[1]);
 
         var monitorWorkerInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
-        _reservedTimeForExecutionInMilliseconds = TimeSpan.FromMilliseconds(TimeSpan.FromSeconds(monitorWorkerInterval - 20).TotalMilliseconds / _sitesTake);
+        _reservedTimeForExecution = TimeSpan.FromMilliseconds(TimeSpan.FromSeconds(monitorWorkerInterval - 20).TotalMilliseconds / (Math.Max(_sitesTake / _maxSitesInQueue, 1)));
     }
 
     public async Task<int> MonitorAllAsync()
@@ -89,10 +89,10 @@ public class MonitorSitesStatusService
                 {
                     completionTimes.TryDequeue(out var earliest);
                     var elapsed = stopwatch.Elapsed - earliest;
-                    var delay = _reservedTimeForExecutionInMilliseconds - elapsed;
+                    var delay = _reservedTimeForExecution - elapsed;
                     if (delay > TimeSpan.Zero)
                     {
-                        await Task.Delay(_reservedTimeForExecutionInMilliseconds);
+                        await Task.Delay(_reservedTimeForExecution);
                     }
                 }
 
