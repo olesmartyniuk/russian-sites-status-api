@@ -14,6 +14,7 @@ public class MonitorSitesStatusService
     private readonly int _maxSitesInQueue;
     private readonly int _sitesSkip;
     private readonly int _sitesTake;
+    private readonly int _monitorWorkerInterval;
     private readonly TimeSpan _reservedTimeForExecution;
 
     public MonitorSitesStatusService(
@@ -31,8 +32,10 @@ public class MonitorSitesStatusService
         _sitesSkip = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[0]);
         _sitesTake = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[1]);
 
-        var monitorWorkerInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
-        _reservedTimeForExecution = TimeSpan.FromMilliseconds(TimeSpan.FromSeconds(monitorWorkerInterval - 20).TotalMilliseconds / (Math.Max(_sitesTake / _maxSitesInQueue, 1)));
+        _monitorWorkerInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
+        _reservedTimeForExecution = 
+            TimeSpan.FromMilliseconds(TimeSpan.FromSeconds(_monitorWorkerInterval - 20).TotalMilliseconds /
+            (Math.Max(_sitesTake / _maxSitesInQueue, 1)));
     }
 
     public async Task<int> MonitorAllAsync()
@@ -78,35 +81,37 @@ public class MonitorSitesStatusService
         var stopwatch = Stopwatch.StartNew();
         var completionTimes = new ConcurrentQueue<TimeSpan>();
 
+        _logger.LogInformation($"Check sites for region {region.Code} started at {DateTime.UtcNow}, should be finished at {DateTime.UtcNow.AddSeconds(_monitorWorkerInterval)}");
+
         var tasks = new List<Task>();
         foreach (var site in sites)
         {
             var task = Task.Run(async () =>
-            {
-                Debug.WriteLine($"Task {Task.CurrentId} begins and waits for the semaphore.Number = {throttler.CurrentCount}");
+            {                
                 await throttler.WaitAsync();
                 if (Interlocked.Increment(ref totalStartedTasks) > _maxSitesInQueue)
-                {
+                {                    
                     completionTimes.TryDequeue(out var earliest);
                     var elapsed = stopwatch.Elapsed - earliest;
                     var delay = _reservedTimeForExecution - elapsed;
                     if (delay > TimeSpan.Zero)
                     {
+                        _logger.LogInformation($"{site.Name} delay = {_reservedTimeForExecution}");
                         await Task.Delay(_reservedTimeForExecution);
                     }
                 }
 
-                Debug.WriteLine($"Task {Task.CurrentId} enters the semaphore.Number = {throttler.CurrentCount}");
+                _logger.LogDebug($"{site.Name} check for region {region.Code} stared.");
                 try
                 {
                     var check = await _checkSiteService.Check(site, region, checkedAt);
                     checks.Add(check);
+                    _logger.LogDebug($"{site.Name} check for region {region.Code} finished.");
                 }
                 finally
                 {
-                    var semaphoreCount = throttler.Release();
                     completionTimes.Enqueue(stopwatch.Elapsed);
-                    Debug.WriteLine($"Task {Task.CurrentId} releases the semaphore; previous count: NumberRelease = {semaphoreCount}.NumberCurrentCount = {throttler.CurrentCount}");
+                    var semaphoreCount = throttler.Release();                    
                 }
             });
 
@@ -114,6 +119,9 @@ public class MonitorSitesStatusService
         }
 
         await Task.WhenAll(tasks);
+
+        _logger.LogDebug($"Check sites for region {region.Code} at {DateTime.UtcNow}, total time: {stopwatch.ElapsedMilliseconds / 1000} sec");
+
         await SaveChecks(checks);
     }
 
