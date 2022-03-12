@@ -95,8 +95,8 @@ public class MonitorSitesStatusService
                     var delay = _reservedTimeForExecution - earliest;
                     if (delay > 0)
                     {
-                        _logger.LogInformation($"{site.Name} delay = {delay}");
-                        await Task.Delay(delay);
+                        _logger.LogInformation($"{site.Name} delay = {delay} seconds");
+                        await Task.Delay(TimeSpan.FromSeconds(delay));
                     }
                 }
 
