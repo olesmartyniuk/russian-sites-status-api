@@ -14,6 +14,7 @@ public class MonitorSitesStatusService
     private readonly int _maxSitesInQueue;
     private readonly int _sitesSkip;
     private readonly int _sitesTake;
+    private readonly int _maxSitesInWaitQueue;
     private readonly int _monitorWorkerInterval;
     private readonly int _reservedTimeForExecution;
 
@@ -31,6 +32,7 @@ public class MonitorSitesStatusService
         _maxSitesInQueue = int.Parse(_configuration["MAX_SITES_IN_QUEUE"]);
         _sitesSkip = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[0]);
         _sitesTake = int.Parse(_configuration["SITE_CHECK_SKIP_TAKE"].Split(",")[1]);
+        _maxSitesInWaitQueue = int.Parse(_configuration["MAX_SITES_IN_WAIT_QUEUE"]);
 
         _monitorWorkerInterval = int.Parse(_configuration["SITE_CHECK_INTERVAL"]);
         _reservedTimeForExecution =
@@ -78,6 +80,8 @@ public class MonitorSitesStatusService
         var checks = new ConcurrentBag<Check>();
         var throttler = new SemaphoreSlim(_maxSitesInQueue, _maxSitesInQueue);
         var totalStartedTasks = 0;
+        var waitedTasks = 0;
+
         var stopwatch = Stopwatch.StartNew();
         var completionTimes = new ConcurrentQueue<int>();
 
@@ -93,10 +97,17 @@ public class MonitorSitesStatusService
                 {
                     completionTimes.TryDequeue(out var earliest);
                     var delay = _reservedTimeForExecution - earliest;
-                    if (delay > 0)
+                    if (delay > 0 && waitedTasks <= _maxSitesInWaitQueue)
                     {
                         _logger.LogInformation($"{site.Name} delay = {delay} seconds");
+                        Interlocked.Increment(ref waitedTasks);
                         await Task.Delay(TimeSpan.FromSeconds(delay));
+                        Interlocked.Decrement(ref waitedTasks);
+                    }
+
+                    if (waitedTasks >= _maxSitesInWaitQueue)
+                    {
+                        _logger.LogInformation($"NoSenseToWait waitedTasks ={ waitedTasks }");
                     }
                 }
 
