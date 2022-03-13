@@ -58,11 +58,11 @@ public class CheckSiteService : ICheckSiteService
         catch (TaskCanceledException ex)
         {
             statusCode = 0;
-            _logger.LogError($"Timeout error on site. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}");
+            _logger.LogInformation($"Timeout error on site. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}");
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError($"Proxy is not available. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}");
+            _logger.LogInformation($"Proxy is not available. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}");
         }
         catch (Exception ex)
         {
