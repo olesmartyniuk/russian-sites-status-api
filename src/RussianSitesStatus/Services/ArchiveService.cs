@@ -25,8 +25,8 @@ public class ArchiveService
         {
             var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
-            var oldestChecksDateTime = await databaseStorage.GetOldestCheckSiteDateAsync();
-            var lastStatisticsDateTime = await databaseStorage.GetNewestStatistisDateAsync(); //TODOVK: check if statistis exist per site
+            var oldestChecksDateTime = await databaseStorage.GetOldestCheckSiteDate();
+            var lastStatisticsDateTime = await databaseStorage.GetNewestStatistisDate(); //TODOVK: check if statistis exist per site
             if (!oldestChecksDateTime.HasValue || !lastStatisticsDateTime.HasValue)
             {
                 return;
@@ -36,7 +36,7 @@ public class ArchiveService
             var lastStatisticsDate = lastStatisticsDateTime.Value.Date;
             if (oldestChecksDate < lastStatisticsDate)
             {
-                await databaseStorage.DeleteStatistisAsync(lastStatisticsDate);
+                await databaseStorage.DeleteStatistis(lastStatisticsDate);
             }
         }
     }
