@@ -35,7 +35,7 @@ public class CalculateStatisticService
             try
             {
                 var statistics = await databaseStorage
-                    .CalculateStatisticAsync(
+                    .CalculateStatistic(
                         siteWithDate.SiteId,
                         siteWithDate.AgregateFor);
 
@@ -46,7 +46,7 @@ public class CalculateStatisticService
                     Data = JsonConvert.SerializeObject(statistics)
                 };
 
-                await databaseStorage.AddChecksStatisticsAsync(newCheck);
+                await databaseStorage.AddChecksStatistics(newCheck);
             }
             catch (Exception ex)
             {

@@ -258,7 +258,7 @@ public class DatabaseStorage
         await _db.SaveChangesAsync();
     }
 
-    public async Task<DateTime?> GetOldestCheckSiteDateAsync()
+    public async Task<DateTime?> GetOldestCheckSiteDate()
     {
         var commandText = @"SELECT MIN(checked_at) FROM checks;";
 
@@ -284,18 +284,18 @@ public class DatabaseStorage
 			            ch.site_id = cs.site_id AND 
 			            CAST(ch.checked_at AS DATE) = cs.day
 	            ) 
-	            AND CAST(ch.checked_at AS DATE) <> CAST(now() AS DATE);";       
+	            AND CAST(ch.checked_at AS DATE) <> CAST(now() AS DATE);";
 
         var connection = _db.Database.GetDbConnection();
         return await connection.QueryAsync<SiteAgregateFor>(commandText);
     }
 
-    public async Task<bool> HasStatisticsAsync(int siteId, DateTime date)
+    public async Task<bool> HasStatistics(int siteId, DateTime date)
     {
         return await _db.ChecksStatistics.AnyAsync(cs => cs.SiteId == siteId && cs.Day == date);
     }
 
-    public async Task<IEnumerable<StatisticInfo>> CalculateStatisticAsync(long siteId, DateTime date)
+    public async Task<IEnumerable<StatisticInfo>> CalculateStatistic(long siteId, DateTime date)
     {
         var commandText = @"SELECT * FROM fn_calculate_statistic_per_day(@siteId, @date)";
 
@@ -304,18 +304,17 @@ public class DatabaseStorage
         parameters.Add("@date", date, DbType.Date);
 
         var connection = _db.Database.GetDbConnection();
-        var result = await connection.QueryAsync<StatisticInfo>(commandText, parameters);
-        return result;
+        return await connection.QueryAsync<StatisticInfo>(commandText, parameters);
     }
 
-    public async Task AddChecksStatisticsAsync(ChecksStatistics checksStatistics)
+    public async Task AddChecksStatistics(ChecksStatistics checksStatistics)
     {
         _db.ChecksStatistics.Add(checksStatistics);
 
         await _db.SaveChangesAsync();
     }
 
-    public async Task DeleteStatistisAsync(DateTime endDate)
+    public async Task DeleteStatistis(DateTime endDate)
     {
         var commandText = @"DELETE FROM checks WHERE checked_at < @end_date;";
 
@@ -323,7 +322,7 @@ public class DatabaseStorage
         await _db.Database.ExecuteSqlRawAsync(commandText, endDateParam);
     }
 
-    public async Task<DateTime?> GetNewestStatistisDateAsync()
+    public async Task<DateTime?> GetNewestStatistisDate()
     {
         var commandText = @"SELECT MAX(day) FROM checks_statistics;";
 
