@@ -37,7 +37,7 @@ public class CalcualteStatisticWorker : BackgroundService
                 var timer = new Stopwatch();
                 timer.Start();
 
-                await _calculateStatisticService.CreateStatisticAsync();
+                await _calculateStatisticService.SaveStatistic();
 
                 timer.Stop();
                 spentTime = (int)timer.Elapsed.TotalSeconds;
