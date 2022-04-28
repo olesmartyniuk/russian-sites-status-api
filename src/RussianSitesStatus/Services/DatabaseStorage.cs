@@ -297,14 +297,82 @@ public class DatabaseStorage
 
     public async Task<IEnumerable<StatisticInfo>> CalculateStatistic(long siteId, DateTime date)
     {
-        var commandText = @"SELECT * FROM fn_calculate_statistic_per_day(@siteId, @date)";
+        var commandText = @"
+            SELECT 
+                checked_at as CheckedAt,                     
+                SUM(CASE status WHEN 1 THEN 1 ELSE 0 END)::int as Available,
+                SUM(CASE status WHEN 2 THEN 1 ELSE 0 END)::int as Unknown,
+                SUM(CASE status WHEN 3 THEN 1 ELSE 0 END)::int as Down
+            FROM checks
+            WHERE site_id = @siteId and checked_at between (@date) and (@date + '1 day'::interval)
+            GROUP BY checked_at
+            ORDER BY checked_at;";
 
         var parameters = new DynamicParameters();
         parameters.Add("@siteId", siteId);
         parameters.Add("@date", date, DbType.Date);
 
         var connection = _db.Database.GetDbConnection();
-        return await connection.QueryAsync<StatisticInfo>(commandText, parameters);
+        var groupedStats = await connection.QueryAsync<StatsPerMoment>(commandText, parameters);
+
+        var statsByHours = new Dictionary<int, StatisticInfo>();
+        foreach (var stat in groupedStats)
+        {
+            var hour = stat.CheckedAt.Hour;
+            if (!statsByHours.ContainsKey(hour))
+            {
+                statsByHours[hour] = new StatisticInfo
+                {
+                    hour = hour
+                };
+            }
+
+            var statsForHour = statsByHours[hour];            
+            switch (GetCheckStatus(stat))
+            {
+                case CheckStatus.Available:
+                    statsForHour.up++;
+                    break;
+                case CheckStatus.Unknown:
+                    statsForHour.unknown++;
+                    break;
+                case CheckStatus.Unavailable:
+                    statsForHour.down++;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return statsByHours.Values;
+    }
+
+    private CheckStatus GetCheckStatus(StatsPerMoment stat)
+    {        
+        if (stat.Available > 0)
+        {
+            return CheckStatus.Available;
+        }
+        
+        if (stat.Unknown > 0)
+        {
+            return CheckStatus.Unknown;
+        }
+        
+        if (stat.Down > 0)
+        {
+            return CheckStatus.Unavailable;
+        }
+
+        return CheckStatus.Unknown;
+    }
+
+    private class StatsPerMoment
+    {
+        public DateTime CheckedAt { get; set; }        
+        public int Available { get; set; }
+        public int Unknown { get; set; }
+        public int Down { get; set; }
     }
 
     public async Task AddChecksStatistics(ChecksStatistics checksStatistics)
