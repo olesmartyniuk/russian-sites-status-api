@@ -86,6 +86,7 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddSingleton<InMemoryStorage<SiteVM>>();
     services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
     services.AddSingleton<BaseInMemoryStorage<RegionVM>>();
+    services.AddSingleton<StatisticStorage>();
 
     services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
     services.AddSingleton<IFetchDataService, FetchDataService>();
@@ -101,6 +102,7 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddHostedService<SyncSitesWorker>();
     services.AddHostedService<MonitorStatusWorker>();
     services.AddHostedService<CalcualteStatisticWorker>();
+    services.AddHostedService<StatisticDataFetcher>();
     services.AddHostedService<ArchiveWorker>(); //TODOVK: needs improvement, do not review
 
     builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
