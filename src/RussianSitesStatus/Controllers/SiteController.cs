@@ -17,14 +17,21 @@ public class SiteController : ControllerBase
     private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
     private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
     private readonly DatabaseStorage _databaseStorage;
+    private readonly StatisticStorage _statisticStorage;
     private readonly ICheckSiteService _checkSiteService;
 
-    public SiteController(InMemoryStorage<SiteVM> liteStatusStorage, InMemoryStorage<SiteDetailsVM> fullStatusStorage, DatabaseStorage databaseStorage, ICheckSiteService checkSiteService)
+    public SiteController(
+        InMemoryStorage<SiteVM> liteStatusStorage,
+        InMemoryStorage<SiteDetailsVM> fullStatusStorage,
+        DatabaseStorage databaseStorage,
+        ICheckSiteService checkSiteService,
+        StatisticStorage statisticStorage)
     {
         _liteStatusStorage = liteStatusStorage;
         _fullStatusStorage = fullStatusStorage;
         _databaseStorage = databaseStorage;
         _checkSiteService = checkSiteService;
+        _statisticStorage = statisticStorage;
     }
 
     /// <summary>
@@ -119,7 +126,7 @@ public class SiteController : ControllerBase
     /// <response code="500">Internal server error</response> 
     [HttpPost("api/sites/{siteUrl}")]
     [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
-    public async Task<ActionResult> Add([FromRoute()]string siteUrl)
+    public async Task<ActionResult> Add([FromRoute()] string siteUrl)
     {
         siteUrl = HttpUtility
             .UrlDecode(siteUrl)
@@ -196,9 +203,9 @@ public class SiteController : ControllerBase
         if (string.IsNullOrEmpty(siteUrl) | siteUrl.Length < 3)
         {
             return BadRequest("The search text should contains more than 2 symbols");
-        }        
+        }
 
-        var regions = await _databaseStorage.GetRegions(true);        
+        var regions = await _databaseStorage.GetRegions(true);
         var site = await _checkSiteService.CheckByUrl(siteUrl, regions);
 
         var result = new SiteDetailsVM
@@ -210,8 +217,82 @@ public class SiteController : ControllerBase
             Servers = GetServers(site.Checks),
             LastTestedAt = site.CheckedAt
         };
-        
+
         return Ok(result);
+    }
+
+    [HttpGet("api/sites/{siteId}/statistics")]
+    public async Task<ActionResult<StatisticVm>> GetStatisticDefault(long siteId)
+    {
+        var site = await _databaseStorage.GetSite(siteId);
+        if (site == null)
+        {
+            return NotFound($"Site with id '{siteId}' was not found.");
+        }
+
+        var now = DateTime.UtcNow;
+        var periodStart = new DateTime(now.Year, now.Month, now.Day);
+        var periodEnd = periodStart.AddDays(1);
+        var data = _statisticStorage.GetData(site, periodStart, periodEnd);
+
+        return Ok(StatisticViewModelHelper.GetForDay(data, periodStart, site));
+    }
+
+    [HttpGet("api/sites/{siteId}/statistics/period/day/date/{year}/{month}/{day}")]
+    public async Task<ActionResult<StatisticVm>> GetStatisticByDay(long siteId, int year, int month, int day)
+    {
+        var site = await _databaseStorage.GetSite(siteId);
+        if (site == null)
+        {
+            return NotFound($"Site with id '{siteId}' was not found.");
+        }
+
+        var periodStart = new DateTime(year, month, day);
+        var periodEnd = periodStart.AddDays(1);
+        var data = _statisticStorage.GetData(site, periodStart, periodEnd);
+        
+        return Ok(StatisticViewModelHelper.GetForDay(data, periodStart, site));
+    }
+
+    [HttpGet("api/sites/{siteId}/statistics/period/week/date/{year}/{week}")]
+    public async Task<ActionResult<StatisticVm>> GetStatisticByWeek(long siteId, int year, int week)
+    {
+        var site = await _databaseStorage.GetSite(siteId);
+        if (site == null)
+        {
+            return NotFound($"Site with id '{siteId}' was not found.");
+        }
+
+        var periodStart = GetWeekStartDate(year, week);
+        var periodEnd = periodStart.AddDays(7);
+        var data = _statisticStorage.GetData(site, periodStart, periodEnd);
+
+        return Ok(StatisticViewModelHelper.GetForWeek(data, periodStart, site));
+    }
+
+    [HttpGet("api/sites/{siteId}/statistics/period/month/date/{year}/{month}")]
+    public async Task<ActionResult<StatisticVm>> GetStatisticByMonth(long siteId, int year, int month)
+    {
+        var site = await _databaseStorage.GetSite(siteId);
+        if (site == null)
+        {
+            return NotFound($"Site with id '{siteId}' was not found.");
+        }
+
+        var periodStart = new DateTime(year, month, 1);        
+        var periodEnd = periodStart.AddMonths(1);
+        var data = _statisticStorage.GetData(site, periodStart, periodEnd);             
+
+        return Ok(StatisticViewModelHelper.GetForMonth(data, periodStart, site));
+    }
+
+    private DateTime GetWeekStartDate(int year, int week)
+    {
+        DateTime jan1 = new DateTime(year, 1, 1);
+        int day = (int)jan1.DayOfWeek - 1;
+        int delta = (day < 4 ? -day : 7 - day) + 7 * (week - 1);
+
+        return jan1.AddDays(delta);
     }
 
     private List<ServerDto> GetServers(ICollection<Check> checks)

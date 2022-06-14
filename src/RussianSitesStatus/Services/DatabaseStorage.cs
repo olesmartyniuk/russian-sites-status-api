@@ -375,6 +375,14 @@ public class DatabaseStorage
         public int Down { get; set; }
     }
 
+    public async Task<IEnumerable<ChecksStatistics>> GetStatistics(DateTime fromDate)
+    {
+        return await _db
+            .ChecksStatistics
+            .Where(cs => cs.Day > fromDate)
+            .ToListAsync();
+    }
+
     public async Task AddChecksStatistics(ChecksStatistics checksStatistics)
     {
         _db.ChecksStatistics.Add(checksStatistics);
