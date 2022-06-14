@@ -221,6 +221,23 @@ public class SiteController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("api/sites/{siteId}/statistics")]
+    public async Task<ActionResult<StatisticVm>> GetStatisticDefault(long siteId)
+    {
+        var site = await _databaseStorage.GetSite(siteId);
+        if (site == null)
+        {
+            return NotFound($"Site with id '{siteId}' was not found.");
+        }
+
+        var now = DateTime.UtcNow;
+        var periodStart = new DateTime(now.Year, now.Month, now.Day);
+        var periodEnd = periodStart.AddDays(1);
+        var data = _statisticStorage.GetData(site, periodStart, periodEnd);
+
+        return Ok(StatisticViewModelHelper.GetForDay(data, periodStart, site));
+    }
+
     [HttpGet("api/sites/{siteId}/statistics/period/day/date/{year}/{month}/{day}")]
     public async Task<ActionResult<StatisticVm>> GetStatisticByDay(long siteId, int year, int month, int day)
     {

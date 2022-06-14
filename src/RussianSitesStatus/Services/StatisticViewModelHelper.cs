@@ -137,7 +137,7 @@ public static class StatisticViewModelHelper
         {
             Current = new Link
             {
-                Name = "Current",
+                Name = currentDate.ToString("MMMM dd, hh:mm", CultureInfo.GetCultureInfo("en-US")),
                 Url = FormatUrl(currentDate)
             },
             Next = new Link
@@ -168,7 +168,7 @@ public static class StatisticViewModelHelper
         {
             Current = new Link
             {
-                Name = "Current",
+                Name = currentDate.ToString("MMMM dd", CultureInfo.GetCultureInfo("en-US")),
                 Url = FormatUrl(currentDate)
             },
             Next = new Link
@@ -199,7 +199,7 @@ public static class StatisticViewModelHelper
         {
             Current = new Link
             {
-                Name = "Current",
+                Name = $"Week {GetWeekNumber(currentDate)}",
                 Url = FormatUrl(currentDate)
             },
             Next = new Link
@@ -230,7 +230,7 @@ public static class StatisticViewModelHelper
         {
             Current = new Link
             {
-                Name = "Current",
+                Name = currentDate.ToString("MMMM", CultureInfo.GetCultureInfo("en-US")),
                 Url = FormatUrl(currentDate)
             },
             Next = new Link

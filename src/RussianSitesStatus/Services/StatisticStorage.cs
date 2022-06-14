@@ -24,7 +24,8 @@ namespace RussianSitesStatus.Services
             var statistics = _storage[site.Id];
 
             return statistics
-                .Where(s => periodStart <= s.Hour && s.Hour < periodEnd);
+                .Where(s => periodStart <= s.Hour && s.Hour < periodEnd)
+                .OrderBy(s => s.Hour);
         }
 
         public async Task UpdateStorage()
