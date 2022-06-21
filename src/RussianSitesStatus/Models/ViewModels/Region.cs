@@ -2,7 +2,7 @@ using RussianSitesStatus.Models.ViewModels;
 
 namespace RussianSitesStatus.Models;
 
-public class RegionVM : BaseModelVM
+public class Region : BaseModel
 {
     public string Name { get; set; }
     public string Code { get; set; }

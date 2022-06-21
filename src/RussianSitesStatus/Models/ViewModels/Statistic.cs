@@ -1,13 +1,13 @@
 ﻿namespace RussianSitesStatus.Models;
 
-public class StatisticVm
+public class Statistic
 {
     public Navigation Navigation { get; set; }
     public List<Period> Periods { get; set; }
-    public List<DataItem> Data { get; set; }
+    public List<Data> Data { get; set; }
 }
 
-public class DataItem
+public class Data
 {
     public int Up { get; set; }
     public int Down { get; set; }

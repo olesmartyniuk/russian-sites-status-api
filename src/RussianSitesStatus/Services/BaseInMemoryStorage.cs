@@ -1,7 +1,7 @@
 using RussianSitesStatus.Models.ViewModels;
 
 namespace RussianSitesStatus.Services;
-public class BaseInMemoryStorage<T> where T : BaseModelVM
+public class BaseInMemoryStorage<T> where T : BaseModel
 {
     private readonly ReaderWriterLockSlim _lock = new();
     private readonly Dictionary<long, T> _items = new();

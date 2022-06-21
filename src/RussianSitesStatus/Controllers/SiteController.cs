@@ -14,15 +14,15 @@ namespace RussianSitesStatus.Controllers;
 [ApiController]
 public class SiteController : ControllerBase
 {
-    private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
-    private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
+    private readonly InMemoryStorage<Models.Site> _liteStatusStorage;
+    private readonly InMemoryStorage<SiteDetails> _fullStatusStorage;
     private readonly DatabaseStorage _databaseStorage;
     private readonly StatisticStorage _statisticStorage;
     private readonly ICheckSiteService _checkSiteService;
 
     public SiteController(
-        InMemoryStorage<SiteVM> liteStatusStorage,
-        InMemoryStorage<SiteDetailsVM> fullStatusStorage,
+        InMemoryStorage<Models.Site> liteStatusStorage,
+        InMemoryStorage<SiteDetails> fullStatusStorage,
         DatabaseStorage databaseStorage,
         ICheckSiteService checkSiteService,
         StatisticStorage statisticStorage)
@@ -47,7 +47,7 @@ public class SiteController : ControllerBase
     /// <response code="200">List of sites</response>
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites")]
-    public ActionResult<List<SiteVM>> GetAll()
+    public ActionResult<List<Models.Site>> GetAll()
     {
         var result = _liteStatusStorage
             .GetAll()
@@ -71,7 +71,7 @@ public class SiteController : ControllerBase
     /// <response code="404">Site not found</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/{id}")]
-    public ActionResult<SiteDetailsVM> Get(long id)
+    public ActionResult<SiteDetails> Get(long id)
     {
         var result = _fullStatusStorage.Get(id);
 
@@ -98,7 +98,7 @@ public class SiteController : ControllerBase
     /// <response code="400">Bad request</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/search")]
-    public ActionResult<IEnumerable<SiteDetailsVM>> Search([FromQuery] string text)
+    public ActionResult<IEnumerable<SiteDetails>> Search([FromQuery] string text)
     {
         if (string.IsNullOrEmpty(text) | text.Length < 3)
         {
@@ -142,7 +142,7 @@ public class SiteController : ControllerBase
             return Conflict(originalSite);
         }
 
-        var site = new Site
+        var site = new Database.Models.Site
         {
             Name = siteUrl.NormalizeSiteName(),
             CreatedAt = DateTime.UtcNow,
@@ -198,7 +198,7 @@ public class SiteController : ControllerBase
     /// <response code="400">Bad request</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/check/{siteUrl}")]
-    public async Task<ActionResult<SiteDetailsVM>> Check(string siteUrl)
+    public async Task<ActionResult<SiteDetails>> Check(string siteUrl)
     {
         if (string.IsNullOrEmpty(siteUrl) | siteUrl.Length < 3)
         {
@@ -208,7 +208,7 @@ public class SiteController : ControllerBase
         var regions = await _databaseStorage.GetRegions(true);
         var site = await _checkSiteService.CheckByUrl(siteUrl, regions);
 
-        var result = new SiteDetailsVM
+        var result = new SiteDetails
         {
             Id = site.Id,
             Name = site.Name,
@@ -222,7 +222,7 @@ public class SiteController : ControllerBase
     }
 
     [HttpGet("api/sites/{siteId}/statistics")]
-    public async Task<ActionResult<StatisticVm>> GetStatisticDefault(long siteId)
+    public async Task<ActionResult<Models.Statistic>> GetStatisticDefault(long siteId)
     {
         var site = await _databaseStorage.GetSite(siteId);
         if (site == null)
@@ -239,7 +239,7 @@ public class SiteController : ControllerBase
     }
 
     [HttpGet("api/sites/{siteId}/statistics/period/day/date/{year}/{month}/{day}")]
-    public async Task<ActionResult<StatisticVm>> GetStatisticByDay(long siteId, int year, int month, int day)
+    public async Task<ActionResult<Models.Statistic>> GetStatisticByDay(long siteId, int year, int month, int day)
     {
         var site = await _databaseStorage.GetSite(siteId);
         if (site == null)
@@ -255,7 +255,7 @@ public class SiteController : ControllerBase
     }
 
     [HttpGet("api/sites/{siteId}/statistics/period/week/date/{year}/{week}")]
-    public async Task<ActionResult<StatisticVm>> GetStatisticByWeek(long siteId, int year, int week)
+    public async Task<ActionResult<Models.Statistic>> GetStatisticByWeek(long siteId, int year, int week)
     {
         var site = await _databaseStorage.GetSite(siteId);
         if (site == null)
@@ -271,7 +271,7 @@ public class SiteController : ControllerBase
     }
 
     [HttpGet("api/sites/{siteId}/statistics/period/month/date/{year}/{month}")]
-    public async Task<ActionResult<StatisticVm>> GetStatisticByMonth(long siteId, int year, int month)
+    public async Task<ActionResult<Models.Statistic>> GetStatisticByMonth(long siteId, int year, int month)
     {
         var site = await _databaseStorage.GetSite(siteId);
         if (site == null)
@@ -295,17 +295,18 @@ public class SiteController : ControllerBase
         return jan1.AddDays(delta);
     }
 
-    private List<ServerDto> GetServers(ICollection<Check> checks)
+    private List<Server> GetServers(ICollection<Check> checks)
     {
-        var servers = new List<ServerDto>();
+        var servers = new List<Server>();
 
         foreach (var check in checks)
-            servers.Add(new ServerDto
+            servers.Add(new Server
             {
                 Region = check.Region.Name,
                 RegionCode = check.Region.Code,
                 Status = GetSiteStatus(check.Status),
-                StatusCode = check.StatusCode
+                StatusCode = check.StatusCode,
+                SpentTimeInSec = check.SpentTime
             });
 
         return servers;
