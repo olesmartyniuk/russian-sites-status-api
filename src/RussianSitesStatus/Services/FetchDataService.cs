@@ -73,7 +73,7 @@ namespace RussianSitesStatus.Services
                 Id = siteDbItem.Id,
                 Name = siteDbItem.Name,                
                 Status = status,
-                Uptime = uptime,
+                Uptime = uptime,               
                 Servers = GetServers(siteDbItem.Checks),                
                 LastTestedAt = siteDbItem.CheckedAt
             };
@@ -89,7 +89,8 @@ namespace RussianSitesStatus.Services
                     Region = check.Region.Name,
                     RegionCode = check.Region.Code,
                     Status = GetSiteStatus(check.Status),
-                    StatusCode = check.StatusCode                    
+                    StatusCode = check.StatusCode,
+                    SpentTimeInSec = check.SpentTime
                 });
 
             return servers;
