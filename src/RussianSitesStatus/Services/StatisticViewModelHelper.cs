@@ -1,14 +1,15 @@
 ﻿using RussianSitesStatus.Database.Models;
 using RussianSitesStatus.Models;
 using System.Globalization;
+using Site = RussianSitesStatus.Database.Models.Site;
 
 namespace RussianSitesStatus.Services;
 
 public static class StatisticViewModelHelper
 {
-    public static StatisticVm GetForDay(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
+    public static Models.Statistic GetForDay(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
     {
-        var data = statistic.Select(s => new DataItem
+        var data = statistic.Select(s => new Data
         {
             Up = s.Up,
             Down = s.Down,
@@ -16,7 +17,7 @@ public static class StatisticViewModelHelper
             Label = s.Hour.Hour.ToString()
         });
 
-        var result = new StatisticVm
+        var result = new Models.Statistic
         {
             Navigation = GetNavigation(site, periodStart, PeriodType.Day),
             Periods = GetPeriods(site, PeriodType.Day),
@@ -26,11 +27,11 @@ public static class StatisticViewModelHelper
         return result;
     }
 
-    public static StatisticVm GetForWeek(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
+    public static Models.Statistic GetForWeek(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
     {
         var data = statistic.GroupBy(
            stat => stat.Hour.DayOfWeek,
-           (dayOfWeek, stats) => new DataItem
+           (dayOfWeek, stats) => new Data
            {
                Label = dayOfWeek.ToString(),
                Up = stats.Sum(stat => stat.Up),
@@ -43,7 +44,7 @@ public static class StatisticViewModelHelper
         var nextDate = periodStart.AddDays(7);
         var prevDate = periodStart.AddDays(-7);
 
-        var result = new StatisticVm
+        var result = new Models.Statistic
         {
             Navigation = GetNavigation(site, currentDate, PeriodType.Week),
             Periods = GetPeriods(site, PeriodType.Week),
@@ -53,11 +54,11 @@ public static class StatisticViewModelHelper
         return result;
     }
 
-    public static StatisticVm GetForMonth(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
+    public static Models.Statistic GetForMonth(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
     {
         var data = statistic.GroupBy(
            stat => stat.Hour.Day,
-           (day, stats) => new DataItem
+           (day, stats) => new Data
            {
                Label = day.ToString(),
                Up = stats.Sum(stat => stat.Up),
@@ -70,7 +71,7 @@ public static class StatisticViewModelHelper
         var nextDate = periodStart.AddMonths(1);
         var prevDate = periodStart.AddMonths(-1);
 
-        var result = new StatisticVm
+        var result = new Models.Statistic
         {
             Navigation = GetNavigation(site, currentDate, PeriodType.Month),
             Periods = GetPeriods(site, PeriodType.Month),

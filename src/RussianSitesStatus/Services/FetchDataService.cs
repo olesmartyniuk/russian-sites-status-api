@@ -2,6 +2,7 @@
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Models.Constants;
 using RussianSitesStatus.Services.Contracts;
+using Site = RussianSitesStatus.Database.Models.Site;
 
 namespace RussianSitesStatus.Services
 {
@@ -14,13 +15,13 @@ namespace RussianSitesStatus.Services
         }
 
 
-        public async Task<IEnumerable<SiteDetailsVM>> GetAllSitesDetailsAsync()
+        public async Task<IEnumerable<SiteDetails>> GetAllSitesDetailsAsync()
         {
             using (var serviceScope = _serviceScopeFactory.CreateScope())
             {
                 var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
-                var siteDetailsVMList = new List<SiteDetailsVM>();
+                var siteDetailsVMList = new List<SiteDetails>();
 
                 var sitesDB = await databaseStorage
                     .GetAllSitesWithLastChecks();
@@ -54,7 +55,7 @@ namespace RussianSitesStatus.Services
             return result;
         }
 
-        private SiteDetailsVM GetSiteDetailsVM(
+        private SiteDetails GetSiteDetailsVM(
             Site siteDbItem, 
             IReadOnlyDictionary<long, float> uptimePerSite, 
             IReadOnlyDictionary<long, CheckStatus> statusPerSite)
@@ -67,7 +68,7 @@ namespace RussianSitesStatus.Services
                 ? (float?)result * 100 
                 : null;
             
-            return new SiteDetailsVM
+            return new SiteDetails
             {
                 Id = siteDbItem.Id,
                 Name = siteDbItem.Name,                
@@ -78,12 +79,12 @@ namespace RussianSitesStatus.Services
             };
         }
 
-        private List<ServerDto> GetServers(ICollection<Check> checks)
+        private List<Server> GetServers(ICollection<Check> checks)
         {
-            var servers = new List<ServerDto>();
+            var servers = new List<Server>();
             
             foreach (var check in checks)
-                servers.Add(new ServerDto
+                servers.Add(new Server
                 {
                     Region = check.Region.Name,
                     RegionCode = check.Region.Code,
@@ -94,14 +95,14 @@ namespace RussianSitesStatus.Services
             return servers;
         }
 
-        public async Task<IEnumerable<RegionVM>> GetAllRegionsAsync()
+        public async Task<IEnumerable<Models.Region>> GetAllRegionsAsync()
         {
             using (var serviceScope = _serviceScopeFactory.CreateScope())
             {
                 var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
                 var regions = await databaseStorage.GetRegions();
-                return regions.Select(region => new RegionVM
+                return regions.Select(region => new Models.Region
                 {
                     Id = region.Id,
                     Name = region.Name,
