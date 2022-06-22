@@ -235,7 +235,7 @@ public class SiteController : ControllerBase
         var periodEnd = periodStart.AddDays(1);
         var data = _statisticStorage.GetData(site, periodStart, periodEnd);
 
-        return Ok(StatisticViewModelHelper.GetForDay(data, periodStart, site));
+        return Ok(StatisticDtoBuilder.GetForDay(data, periodStart, site));
     }
 
     [HttpGet("api/sites/{siteId}/statistics/period/day/date/{year}/{month}/{day}")]
@@ -251,7 +251,7 @@ public class SiteController : ControllerBase
         var periodEnd = periodStart.AddDays(1);
         var data = _statisticStorage.GetData(site, periodStart, periodEnd);
         
-        return Ok(StatisticViewModelHelper.GetForDay(data, periodStart, site));
+        return Ok(StatisticDtoBuilder.GetForDay(data, periodStart, site));
     }
 
     [HttpGet("api/sites/{siteId}/statistics/period/week/date/{year}/{week}")]
@@ -267,7 +267,7 @@ public class SiteController : ControllerBase
         var periodEnd = periodStart.AddDays(7);
         var data = _statisticStorage.GetData(site, periodStart, periodEnd);
 
-        return Ok(StatisticViewModelHelper.GetForWeek(data, periodStart, site));
+        return Ok(StatisticDtoBuilder.GetForWeek(data, periodStart, site));
     }
 
     [HttpGet("api/sites/{siteId}/statistics/period/month/date/{year}/{month}")]
@@ -283,7 +283,7 @@ public class SiteController : ControllerBase
         var periodEnd = periodStart.AddMonths(1);
         var data = _statisticStorage.GetData(site, periodStart, periodEnd);             
 
-        return Ok(StatisticViewModelHelper.GetForMonth(data, periodStart, site));
+        return Ok(StatisticDtoBuilder.GetForMonth(data, periodStart, site));
     }
 
     private DateTime GetWeekStartDate(int year, int week)
