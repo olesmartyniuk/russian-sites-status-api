@@ -5,7 +5,7 @@ using Site = RussianSitesStatus.Database.Models.Site;
 
 namespace RussianSitesStatus.Services;
 
-public static class StatisticViewModelHelper
+public static class StatisticDtoBuilder
 {
     public static Models.Statistic GetForDay(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
     {
@@ -14,8 +14,25 @@ public static class StatisticViewModelHelper
             Up = s.Up,
             Down = s.Down,
             Unknown = s.Unknown,
-            Label = s.Hour.Hour.ToString()
-        });
+            Label = (s.Hour.Hour + 1).ToString()
+        }).ToList();
+
+        var periodEnd = periodStart.AddDays(1);
+
+        var index = 0;
+        for (var date = periodStart; date <= periodEnd; date = date.AddHours(1))
+        {
+            var label = (date.Hour + 1).ToString();
+            if (data.Exists(d => d.Label == label) == false)
+            {
+                data.Insert(index, new Data
+                {
+                    Label = label
+                });
+            }
+
+            index++;
+        }
 
         var result = new Models.Statistic
         {
@@ -38,15 +55,28 @@ public static class StatisticViewModelHelper
                Down = stats.Sum(stat => stat.Down),
                Unknown = stats.Sum(stat => stat.Unknown)
            }
-       ).ToList();
+        ).ToList();
 
-        var currentDate = periodStart;
-        var nextDate = periodStart.AddDays(7);
-        var prevDate = periodStart.AddDays(-7);
+        var periodEnd = periodStart.AddDays(7);
+
+        var index = 0;
+        for (var date = periodStart; date <= periodEnd; date = date.AddDays(1))
+        {
+            var label = date.DayOfWeek.ToString();
+            if (data.Exists(d => d.Label == label) == false)
+            {
+                data.Insert(index, new Data
+                {
+                    Label = label                    
+                });
+            }
+
+            index++;
+        }
 
         var result = new Models.Statistic
         {
-            Navigation = GetNavigation(site, currentDate, PeriodType.Week),
+            Navigation = GetNavigation(site, periodStart, PeriodType.Week),
             Periods = GetPeriods(site, PeriodType.Week),
             Data = data
         };
@@ -67,13 +97,26 @@ public static class StatisticViewModelHelper
            }
        ).ToList();
 
-        var currentDate = periodStart;
-        var nextDate = periodStart.AddMonths(1);
-        var prevDate = periodStart.AddMonths(-1);
+        var periodEnd = periodStart.AddMonths(1);
+
+        var index = 0;
+        for (var date = periodStart; date <= periodEnd; date = date.AddDays(1))
+        {
+            var label = date.Day.ToString();
+            if (data.Exists(d => d.Label == label) == false)
+            {
+                data.Insert(index, new Data
+                {
+                    Label = label
+                });
+            }
+
+            index++;
+        }
 
         var result = new Models.Statistic
         {
-            Navigation = GetNavigation(site, currentDate, PeriodType.Month),
+            Navigation = GetNavigation(site, periodStart, PeriodType.Month),
             Periods = GetPeriods(site, PeriodType.Month),
             Data = data
         };
