@@ -4,10 +4,16 @@ public class Statistic
 {
     public Navigation Navigation { get; set; }
     public List<Period> Periods { get; set; }
-    public List<Data> Data { get; set; }
+    public Data Data { get; set; }
 }
 
 public class Data
+{
+    public int? Uptime { get; set; }
+    public List<Span> History { get; set; }
+}
+
+public class Span
 {
     public int Up { get; set; }
     public int Down { get; set; }

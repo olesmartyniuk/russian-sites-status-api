@@ -213,7 +213,6 @@ public class SiteController : ControllerBase
             Id = site.Id,
             Name = site.Name,
             Status = GetSiteStatus(site.Checks.Max(c => c.Status)),
-            Uptime = 0,
             Servers = GetServers(site.Checks),
             LastTestedAt = site.CheckedAt
         };

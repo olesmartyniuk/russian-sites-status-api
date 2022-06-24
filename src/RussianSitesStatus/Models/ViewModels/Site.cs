@@ -5,7 +5,6 @@ public class Site
     public long Id { get; set; }
     public string Name { get; set; }
     public string Status { get; set; }
-    public double? Uptime { get; set; }
 }
 
 public class SiteDetails : Site
