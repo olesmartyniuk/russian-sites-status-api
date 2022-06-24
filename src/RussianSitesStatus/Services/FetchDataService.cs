@@ -72,8 +72,7 @@ namespace RussianSitesStatus.Services
             {
                 Id = siteDbItem.Id,
                 Name = siteDbItem.Name,                
-                Status = status,
-                Uptime = uptime,               
+                Status = status,            
                 Servers = GetServers(siteDbItem.Checks),                
                 LastTestedAt = siteDbItem.CheckedAt
             };

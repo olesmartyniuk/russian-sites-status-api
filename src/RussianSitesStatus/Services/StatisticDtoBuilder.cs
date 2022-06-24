@@ -9,7 +9,7 @@ public static class StatisticDtoBuilder
 {
     public static Models.Statistic GetForDay(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
     {
-        var data = statistic.Select(s => new Data
+        var history = statistic.Select(s => new Span
         {
             Up = s.Up,
             Down = s.Down,
@@ -23,9 +23,9 @@ public static class StatisticDtoBuilder
         for (var date = periodStart; date <= periodEnd; date = date.AddHours(1))
         {
             var label = (date.Hour + 1).ToString();
-            if (data.Exists(d => d.Label == label) == false)
+            if (history.Exists(d => d.Label == label) == false)
             {
-                data.Insert(index, new Data
+                history.Insert(index, new Span
                 {
                     Label = label
                 });
@@ -38,17 +38,34 @@ public static class StatisticDtoBuilder
         {
             Navigation = GetNavigation(site, periodStart, PeriodType.Day),
             Periods = GetPeriods(site, PeriodType.Day),
-            Data = data.ToList()
+            Data = GetData(history)
         };
 
         return result;
     }
 
+    private static Data GetData(List<Span> history)
+    {
+        double up = history.Sum(s => s.Up);
+        double all = history.Sum(s => s.Up + s.Down + s.Unknown);
+
+
+        int? uptime = all == 0 ? 
+            null : 
+            (int)Math.Round(up / all * 100);
+
+        return new Data
+        {
+            History = history.ToList(),
+            Uptime = uptime
+        };
+    }
+
     public static Models.Statistic GetForWeek(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
     {
-        var data = statistic.GroupBy(
+        var history = statistic.GroupBy(
            stat => stat.Hour.DayOfWeek,
-           (dayOfWeek, stats) => new Data
+           (dayOfWeek, stats) => new Span
            {
                Label = dayOfWeek.ToString(),
                Up = stats.Sum(stat => stat.Up),
@@ -63,9 +80,9 @@ public static class StatisticDtoBuilder
         for (var date = periodStart; date <= periodEnd; date = date.AddDays(1))
         {
             var label = date.DayOfWeek.ToString();
-            if (data.Exists(d => d.Label == label) == false)
+            if (history.Exists(d => d.Label == label) == false)
             {
-                data.Insert(index, new Data
+                history.Insert(index, new Span
                 {
                     Label = label                    
                 });
@@ -78,7 +95,7 @@ public static class StatisticDtoBuilder
         {
             Navigation = GetNavigation(site, periodStart, PeriodType.Week),
             Periods = GetPeriods(site, PeriodType.Week),
-            Data = data
+            Data = GetData(history)
         };
 
         return result;
@@ -86,9 +103,9 @@ public static class StatisticDtoBuilder
 
     public static Models.Statistic GetForMonth(IEnumerable<Statistic> statistic, DateTime periodStart, Site site)
     {
-        var data = statistic.GroupBy(
+        var history = statistic.GroupBy(
            stat => stat.Hour.Day,
-           (day, stats) => new Data
+           (day, stats) => new Span
            {
                Label = day.ToString(),
                Up = stats.Sum(stat => stat.Up),
@@ -103,9 +120,9 @@ public static class StatisticDtoBuilder
         for (var date = periodStart; date <= periodEnd; date = date.AddDays(1))
         {
             var label = date.Day.ToString();
-            if (data.Exists(d => d.Label == label) == false)
+            if (history.Exists(d => d.Label == label) == false)
             {
-                data.Insert(index, new Data
+                history.Insert(index, new Span
                 {
                     Label = label
                 });
@@ -118,7 +135,7 @@ public static class StatisticDtoBuilder
         {
             Navigation = GetNavigation(site, periodStart, PeriodType.Month),
             Periods = GetPeriods(site, PeriodType.Month),
-            Data = data
+            Data = GetData(history)
         };
 
         return result;
