@@ -1,8 +1,9 @@
+using RussianSitesStatus.Models.ViewModels;
+
 namespace RussianSitesStatus.Models;
 
-public class Site
-{
-    public long Id { get; set; }
+public class Site: BaseModel
+{    
     public string Name { get; set; }
     public string Status { get; set; }
 }

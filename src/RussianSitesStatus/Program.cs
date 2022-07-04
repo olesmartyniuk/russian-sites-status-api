@@ -81,10 +81,9 @@ static void AddServices(WebApplicationBuilder builder)
                 }
             );
     }, ServiceLifetime.Scoped);
-
-    services.AddSingleton<InMemoryStorage<Site>>();
-    services.AddSingleton<InMemoryStorage<SiteDetails>>();
-    services.AddSingleton<BaseInMemoryStorage<Region>>();
+    
+    services.AddSingleton<SiteStorage>();
+    services.AddSingleton<RegionStorage>();
     services.AddSingleton<StatisticStorage>();
 
     services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();

@@ -14,19 +14,16 @@ namespace RussianSitesStatus.Controllers;
 [ApiController]
 public class SiteController : ControllerBase
 {
-    private readonly InMemoryStorage<Models.Site> _liteStatusStorage;
-    private readonly InMemoryStorage<SiteDetails> _fullStatusStorage;
+    private readonly SiteStorage _siteStorage;
     private readonly DatabaseStorage _databaseStorage;
     private readonly ICheckSiteService _checkSiteService;
 
-    public SiteController(
-        InMemoryStorage<Models.Site> liteStatusStorage,
-        InMemoryStorage<SiteDetails> fullStatusStorage,
+    public SiteController(        
+        SiteStorage fullStatusStorage,
         DatabaseStorage databaseStorage,
         ICheckSiteService checkSiteService)
     {
-        _liteStatusStorage = liteStatusStorage;
-        _fullStatusStorage = fullStatusStorage;
+        _siteStorage = fullStatusStorage;
         _databaseStorage = databaseStorage;
         _checkSiteService = checkSiteService;
     }
@@ -46,7 +43,7 @@ public class SiteController : ControllerBase
     [HttpGet("api/sites")]
     public ActionResult<List<Models.Site>> GetAll()
     {
-        var result = _liteStatusStorage
+        var result = _siteStorage
             .GetAll()
             .ToList();
 
@@ -70,7 +67,7 @@ public class SiteController : ControllerBase
     [HttpGet("api/sites/{id}")]
     public ActionResult<SiteDetails> Get(long id)
     {
-        var result = _fullStatusStorage.Get(id);
+        var result = _siteStorage.Get(id);
 
         if (result == null)
         {
@@ -102,7 +99,7 @@ public class SiteController : ControllerBase
             return BadRequest("The search text should contains more than 2 symbols");
         }
 
-        var result = _fullStatusStorage.Search(text);
+        var result = _siteStorage.Search(text);
         return Ok(result);
     }
 
