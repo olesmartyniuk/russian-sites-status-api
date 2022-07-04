@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi.Models;
 using RussianSitesStatus.Auth;
 using RussianSitesStatus.BackgroundServices;
-using RussianSitesStatus.Configuration;
 using RussianSitesStatus.Database;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Services;
@@ -103,10 +102,7 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddHostedService<MonitorStatusWorker>();
     services.AddHostedService<CalcualteStatisticWorker>();
     services.AddHostedService<StatisticDataFetcher>();
-    services.AddHostedService<ArchiveWorker>(); //TODOVK: needs improvement, do not review
-
-    builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
-    builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
+    services.AddHostedService<ArchiveWorker>();
 
     builder.Services.AddResponseCompression(options =>
     {
