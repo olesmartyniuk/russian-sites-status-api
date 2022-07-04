@@ -14,15 +14,16 @@ namespace RussianSitesStatus.Controllers;
 [ApiController]
 public class SiteController : ControllerBase
 {
-    private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
-    private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
+    private readonly SiteStorage _siteStorage;
     private readonly DatabaseStorage _databaseStorage;
     private readonly ICheckSiteService _checkSiteService;
 
-    public SiteController(InMemoryStorage<SiteVM> liteStatusStorage, InMemoryStorage<SiteDetailsVM> fullStatusStorage, DatabaseStorage databaseStorage, ICheckSiteService checkSiteService)
+    public SiteController(        
+        SiteStorage fullStatusStorage,
+        DatabaseStorage databaseStorage,
+        ICheckSiteService checkSiteService)
     {
-        _liteStatusStorage = liteStatusStorage;
-        _fullStatusStorage = fullStatusStorage;
+        _siteStorage = fullStatusStorage;
         _databaseStorage = databaseStorage;
         _checkSiteService = checkSiteService;
     }
@@ -40,9 +41,9 @@ public class SiteController : ControllerBase
     /// <response code="200">List of sites</response>
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites")]
-    public ActionResult<List<SiteVM>> GetAll()
+    public ActionResult<List<Models.Site>> GetAll()
     {
-        var result = _liteStatusStorage
+        var result = _siteStorage
             .GetAll()
             .ToList();
 
@@ -64,9 +65,9 @@ public class SiteController : ControllerBase
     /// <response code="404">Site not found</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/{id}")]
-    public ActionResult<SiteDetailsVM> Get(long id)
+    public ActionResult<SiteDetails> Get(long id)
     {
-        var result = _fullStatusStorage.Get(id);
+        var result = _siteStorage.Get(id);
 
         if (result == null)
         {
@@ -91,14 +92,14 @@ public class SiteController : ControllerBase
     /// <response code="400">Bad request</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/search")]
-    public ActionResult<IEnumerable<SiteDetailsVM>> Search([FromQuery] string text)
+    public ActionResult<IEnumerable<SiteDetails>> Search([FromQuery] string text)
     {
         if (string.IsNullOrEmpty(text) | text.Length < 3)
         {
             return BadRequest("The search text should contains more than 2 symbols");
         }
 
-        var result = _fullStatusStorage.Search(text);
+        var result = _siteStorage.Search(text);
         return Ok(result);
     }
 
@@ -119,7 +120,7 @@ public class SiteController : ControllerBase
     /// <response code="500">Internal server error</response> 
     [HttpPost("api/sites/{siteUrl}")]
     [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
-    public async Task<ActionResult> Add([FromRoute()]string siteUrl)
+    public async Task<ActionResult> Add([FromRoute()] string siteUrl)
     {
         siteUrl = HttpUtility
             .UrlDecode(siteUrl)
@@ -135,7 +136,7 @@ public class SiteController : ControllerBase
             return Conflict(originalSite);
         }
 
-        var site = new Site
+        var site = new Database.Models.Site
         {
             Name = siteUrl.NormalizeSiteName(),
             CreatedAt = DateTime.UtcNow,
@@ -191,40 +192,40 @@ public class SiteController : ControllerBase
     /// <response code="400">Bad request</response> 
     /// <response code="500">Internal server error</response> 
     [HttpGet("api/sites/check/{siteUrl}")]
-    public async Task<ActionResult<SiteDetailsVM>> Check(string siteUrl)
+    public async Task<ActionResult<SiteDetails>> Check(string siteUrl)
     {
         if (string.IsNullOrEmpty(siteUrl) | siteUrl.Length < 3)
         {
             return BadRequest("The search text should contains more than 2 symbols");
-        }        
+        }
 
-        var regions = await _databaseStorage.GetRegions(true);        
+        var regions = await _databaseStorage.GetRegions(true);
         var site = await _checkSiteService.CheckByUrl(siteUrl, regions);
 
-        var result = new SiteDetailsVM
+        var result = new SiteDetails
         {
             Id = site.Id,
             Name = site.Name,
             Status = GetSiteStatus(site.Checks.Max(c => c.Status)),
-            Uptime = 0,
             Servers = GetServers(site.Checks),
             LastTestedAt = site.CheckedAt
         };
-        
+
         return Ok(result);
     }
 
-    private List<ServerDto> GetServers(ICollection<Check> checks)
+    private List<Server> GetServers(ICollection<Check> checks)
     {
-        var servers = new List<ServerDto>();
+        var servers = new List<Server>();
 
         foreach (var check in checks)
-            servers.Add(new ServerDto
+            servers.Add(new Server
             {
                 Region = check.Region.Name,
                 RegionCode = check.Region.Code,
                 Status = GetSiteStatus(check.Status),
-                StatusCode = check.StatusCode
+                StatusCode = check.StatusCode,
+                SpentTimeInSec = check.SpentTime
             });
 
         return servers;

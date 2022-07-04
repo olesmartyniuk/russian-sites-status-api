@@ -4,7 +4,7 @@ namespace RussianSitesStatus.Services.Contracts
 {
     public interface IFetchDataService
     {
-        Task<IEnumerable<SiteDetailsVM>> GetAllSitesDetailsAsync();
-        Task<IEnumerable<RegionVM>> GetAllRegionsAsync();
+        Task<IEnumerable<SiteDetails>> GetAllSitesDetailsAsync();
+        Task<IEnumerable<Region>> GetAllRegionsAsync();
     }
 }

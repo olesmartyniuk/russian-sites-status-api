@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi.Models;
 using RussianSitesStatus.Auth;
 using RussianSitesStatus.BackgroundServices;
-using RussianSitesStatus.Configuration;
 using RussianSitesStatus.Database;
 using RussianSitesStatus.Models;
 using RussianSitesStatus.Services;
@@ -82,10 +81,10 @@ static void AddServices(WebApplicationBuilder builder)
                 }
             );
     }, ServiceLifetime.Scoped);
-
-    services.AddSingleton<InMemoryStorage<SiteVM>>();
-    services.AddSingleton<InMemoryStorage<SiteDetailsVM>>();
-    services.AddSingleton<BaseInMemoryStorage<RegionVM>>();
+    
+    services.AddSingleton<SiteStorage>();
+    services.AddSingleton<RegionStorage>();
+    services.AddSingleton<StatisticStorage>();
 
     services.AddSingleton<ISiteSource, IncourseTradeSiteSource>();
     services.AddSingleton<IFetchDataService, FetchDataService>();
@@ -101,10 +100,8 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddHostedService<SyncSitesWorker>();
     services.AddHostedService<MonitorStatusWorker>();
     services.AddHostedService<CalcualteStatisticWorker>();
-    services.AddHostedService<ArchiveWorker>(); //TODOVK: needs improvement, do not review
-
-    builder.Services.Configure<SyncSitesConfiguration>(builder.Configuration.GetSection(nameof(SyncSitesConfiguration)));
-    builder.Services.Configure<MonitorSitesConfiguration>(builder.Configuration.GetSection(nameof(MonitorSitesConfiguration)));
+    services.AddHostedService<StatisticDataFetcher>();
+    services.AddHostedService<ArchiveWorker>();
 
     builder.Services.AddResponseCompression(options =>
     {

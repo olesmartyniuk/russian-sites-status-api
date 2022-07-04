@@ -16,7 +16,7 @@ public class CalculateStatisticService
         _logger = logger;
     }
 
-    public async Task CreateStatisticAsync()
+    public async Task SaveStatistic()
     {
         using var serviceScope = _serviceScopeFactory.CreateScope();
         var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();

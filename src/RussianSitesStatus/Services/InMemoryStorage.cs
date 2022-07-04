@@ -1,10 +1,10 @@
-using RussianSitesStatus.Models;
+using RussianSitesStatus.Models.ViewModels;
 
 namespace RussianSitesStatus.Services;
-public class InMemoryStorage<T> where T : SiteVM
+public class InMemoryStorage<T> where T : BaseModel
 {
-    private readonly ReaderWriterLockSlim _lock = new();
-    private readonly Dictionary<long, T> _items = new();
+    protected readonly ReaderWriterLockSlim _lock = new();
+    protected readonly Dictionary<long, T> _items = new();
 
     public T Get(long id)
     {
@@ -64,17 +64,5 @@ public class InMemoryStorage<T> where T : SiteVM
         {
             _lock.ExitWriteLock();
         }
-    }
-
-    public IEnumerable<T> Search(string url)
-    {
-        //url = url.NormalizeSiteName();
-        //var searchRegex = new Regex($@"((http|https)\:\/\/)?(www.)?\.*{Regex.Escape(url)}", RegexOptions.Compiled);
-
-        var results = _items
-            .Values
-            .Where(x => x.Name.Contains(url));
-
-        return results;
     }
 }

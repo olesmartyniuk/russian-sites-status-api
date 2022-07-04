@@ -5,26 +5,23 @@ using RussianSitesStatus.Services.Contracts;
 namespace RussianSitesStatus.BackgroundServices;
 
 public class MemoryDataFetcher : BackgroundService
-{
-    private readonly InMemoryStorage<SiteVM> _liteStatusStorage;
-    private readonly InMemoryStorage<SiteDetailsVM> _fullStatusStorage;
-    private readonly BaseInMemoryStorage<RegionVM> _regionStorage;
+{    
+    private readonly SiteStorage _siteStorage;
+    private readonly RegionStorage _regionStorage;
     private readonly ILogger<MemoryDataFetcher> _logger;
     private readonly IFetchDataService _fetchDataService;
     private readonly IConfiguration _configuration;
     private readonly int _memoryDataSyncInterval;
 
     public MemoryDataFetcher(
-        InMemoryStorage<SiteVM> liteStatusStorage,
-        InMemoryStorage<SiteDetailsVM> fullStatusStorage,
-        BaseInMemoryStorage<RegionVM> regionStorage,
+        SiteStorage statusStorage,
+        RegionStorage regionStorage,
         ILogger<MemoryDataFetcher> logger,
         IFetchDataService dataService,
         IConfiguration configuration
        )
-    {
-        _liteStatusStorage = liteStatusStorage;
-        _fullStatusStorage = fullStatusStorage;
+    {        
+        _siteStorage = statusStorage;
         _logger = logger;
         _fetchDataService = dataService;
         _regionStorage = regionStorage;
@@ -63,8 +60,7 @@ public class MemoryDataFetcher : BackgroundService
         var sites = await _fetchDataService.GetAllSitesDetailsAsync();
         _logger.LogInformation($"Fetched {sites.Count()} sites.");
 
-        _fullStatusStorage.ReplaceAll(sites);
-        _liteStatusStorage.ReplaceAll(sites.Select(vm => vm as SiteVM));
+        _siteStorage.ReplaceAll(sites);        
 
         var regions = await _fetchDataService.GetAllRegionsAsync();
         _regionStorage.ReplaceAll(regions);

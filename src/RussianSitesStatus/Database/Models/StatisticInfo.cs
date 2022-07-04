@@ -6,8 +6,6 @@ public class StatisticInfo
 {
     public int hour { get; set; }
 
-    public double avg_time { get; set; }
-
     public int up { get; set; }
 
     public int unknown { get; set; }
