@@ -15,32 +15,30 @@ namespace RussianSitesStatus.Services
         }
 
 
-        public async Task<IEnumerable<SiteDetails>> GetAllSitesDetailsAsync()
+        public async Task<IEnumerable<SiteDetails>> GetAllSitesDetails()
         {
-            using (var serviceScope = _serviceScopeFactory.CreateScope())
+            using var serviceScope = _serviceScopeFactory.CreateScope();
+            var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
+
+            var siteDetailsList = new List<SiteDetails>();
+
+            var sitesDB = await databaseStorage
+                .GetAllSitesWithLastChecks();
+
+            var statuses = await databaseStorage.GetAllStatuses();
+
+            var statusesBySiteId = statuses
+                .ToDictionary(x => x.SiteId, y => y.Status);
+
+            var uptime = (await databaseStorage.GetAllUptime())
+                .ToDictionary(x => x.SiteId, y => y.UpTime);
+
+            foreach (var siteDbItem in sitesDB)
             {
-                var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
-
-                var siteDetailsVMList = new List<SiteDetails>();
-
-                var sitesDB = await databaseStorage
-                    .GetAllSitesWithLastChecks();
-
-                var statuses = await databaseStorage.GetAllStatuses();
-
-                var statusesBySiteId = statuses
-                    .ToDictionary(x => x.SiteId, y => y.Status);
-
-                var uptime = (await databaseStorage.GetAllUptime())
-                    .ToDictionary(x => x.SiteId, y => y.UpTime);
-
-                foreach (var siteDbItem in sitesDB)
-                {
-                    siteDetailsVMList.Add(GetSiteDetailsVM(siteDbItem, uptime, statusesBySiteId));
-                }
-
-                return siteDetailsVMList;
+                siteDetailsList.Add(GetSiteDetails(siteDbItem, uptime, statusesBySiteId));
             }
+
+            return siteDetailsList;
         }
 
         public string GetSiteStatus(CheckStatus checkStatus)
@@ -55,7 +53,7 @@ namespace RussianSitesStatus.Services
             return result;
         }
 
-        private SiteDetails GetSiteDetailsVM(
+        private SiteDetails GetSiteDetails(
             Site siteDbItem, 
             IReadOnlyDictionary<long, float> uptimePerSite, 
             IReadOnlyDictionary<long, CheckStatus> statusPerSite)
@@ -72,7 +70,8 @@ namespace RussianSitesStatus.Services
             {
                 Id = siteDbItem.Id,
                 Name = siteDbItem.Name,                
-                Status = status,            
+                Status = status,    
+                Uptime = uptime,
                 Servers = GetServers(siteDbItem.Checks),                
                 LastTestedAt = siteDbItem.CheckedAt
             };
@@ -95,7 +94,7 @@ namespace RussianSitesStatus.Services
             return servers;
         }
 
-        public async Task<IEnumerable<Models.Region>> GetAllRegionsAsync()
+        public async Task<IEnumerable<Models.Region>> GetAllRegions()
         {
             using (var serviceScope = _serviceScopeFactory.CreateScope())
             {

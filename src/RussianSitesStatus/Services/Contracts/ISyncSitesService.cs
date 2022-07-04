@@ -2,6 +2,6 @@
 {
     public interface ISyncSitesService
     {
-        Task SyncAsync();
+        Task Sync();
     }
 }

@@ -37,7 +37,7 @@ public class ArchiveWorker : BackgroundService
                 var timer = new Stopwatch();
                 timer.Start();
 
-                await _archiveService.ArchiveOldDataAsync();
+                await _archiveService.ArchiveOldData();
 
                 timer.Stop();
                 spentTime = (int)timer.Elapsed.TotalSeconds;

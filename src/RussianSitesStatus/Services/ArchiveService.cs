@@ -19,7 +19,7 @@ public class ArchiveService
         _logger = logger;
     }
 
-    public async Task ArchiveOldDataAsync()
+    public async Task ArchiveOldData()
     {
         using (var serviceScope = _serviceScopeFactory.CreateScope())
         {

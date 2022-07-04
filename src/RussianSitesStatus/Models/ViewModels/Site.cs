@@ -6,6 +6,7 @@ public class Site: BaseModel
 {    
     public string Name { get; set; }
     public string Status { get; set; }
+    public double? Uptime { get; set; }
 }
 
 public class SiteDetails : Site

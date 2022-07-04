@@ -22,7 +22,7 @@ public class SyncSitesDatabaseService : ISyncSitesService
         _logger = logger;
     }
 
-    public async Task SyncAsync()
+    public async Task Sync()
     {
         var allSitesFromSources = await GetSitesFromAllSources();
         var siteUrlsToAdd = await GetSiteUrlsToAdd(allSitesFromSources);
@@ -53,7 +53,7 @@ public class SyncSitesDatabaseService : ISyncSitesService
             {
                 try
                 {
-                    var sites = (await siteSource.GetAllAsync())
+                    var sites = (await siteSource.GetAll())
                         .Where(url => url.IsValid())
                         .Select(url => url.NormalizeSiteUrl());
 

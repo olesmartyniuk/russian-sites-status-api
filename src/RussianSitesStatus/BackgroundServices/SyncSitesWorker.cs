@@ -34,7 +34,7 @@ public class SyncSitesWorker : BackgroundService
         {
             try
             {
-                await syncSitesService.SyncAsync();
+                await syncSitesService.Sync();
             }
             catch (Exception e)
             {
