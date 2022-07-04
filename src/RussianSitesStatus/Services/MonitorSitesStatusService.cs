@@ -40,7 +40,7 @@ public class MonitorSitesStatusService
             Math.Max(_sitesTake / _maxSitesInQueue, 1)).TotalSeconds;
     }
 
-    public async Task<int> MonitorAllAsync()
+    public async Task<int> MonitorAll()
     {
         using var serviceScope = _serviceScopeFactory.CreateScope();
 
@@ -142,7 +142,7 @@ public class MonitorSitesStatusService
 
         var databaseStorage = serviceScope.ServiceProvider.GetRequiredService<DatabaseStorage>();
 
-        await databaseStorage.AddChecksAsync(checks.ToList());
+        await databaseStorage.AddChecks(checks.ToList());
     }
 
     private async Task UpdateCheckedAt(DateTime checkedAt, IEnumerable<Site> sitesToCheck)

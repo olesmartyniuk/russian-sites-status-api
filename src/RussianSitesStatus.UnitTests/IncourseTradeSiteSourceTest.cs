@@ -7,10 +7,10 @@ namespace RussianSitesStatus.UnitTests.Services
     public class IncourseTradeSiteSourceTest
     {
         [Fact]
-        public async Task GetAllAsync_HappyPath()
+        public async Task GetAll_HappyPath()
         {
             var incourseTradeSiteSource = new IncourseTradeSiteSource();
-            var result = await incourseTradeSiteSource.GetAllAsync();
+            var result = await incourseTradeSiteSource.GetAll();
             Assert.NotEmpty(result);
         }
     }

@@ -57,12 +57,12 @@ public class MemoryDataFetcher : BackgroundService
 
     private async Task RaplaceInMemoryStorage()
     {        
-        var sites = await _fetchDataService.GetAllSitesDetailsAsync();
+        var sites = await _fetchDataService.GetAllSitesDetails();
         _logger.LogInformation($"Fetched {sites.Count()} sites.");
 
         _siteStorage.ReplaceAll(sites);        
 
-        var regions = await _fetchDataService.GetAllRegionsAsync();
+        var regions = await _fetchDataService.GetAllRegions();
         _regionStorage.ReplaceAll(regions);
 
         _logger.LogInformation($"All in-memory storages were updated.");

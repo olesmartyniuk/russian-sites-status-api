@@ -215,7 +215,7 @@ public class DatabaseStorage
         return newCheck;
     }
 
-    public async Task AddChecksAsync(IEnumerable<Check> newChecks)
+    public async Task AddChecks(IEnumerable<Check> newChecks)
     {
         _db.Checks.AddRange(newChecks);
 

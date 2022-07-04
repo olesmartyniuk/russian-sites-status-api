@@ -2,6 +2,6 @@
 {
     public interface ISiteSource
     {
-        Task<IEnumerable<string>> GetAllAsync();
+        Task<IEnumerable<string>> GetAll();
     }
 }

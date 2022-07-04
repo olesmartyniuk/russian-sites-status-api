@@ -6,7 +6,7 @@ namespace RussianSitesStatus.Services
 {
     public class IncourseTradeSiteSource : ISiteSource
     {
-        public async Task<IEnumerable<string>> GetAllAsync()
+        public async Task<IEnumerable<string>> GetAll()
         {
             var client = new RestClient("http://46.4.63.238/");
             var request = new RestRequest("sites.json", Method.Get);

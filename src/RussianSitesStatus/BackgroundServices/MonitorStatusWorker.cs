@@ -40,7 +40,7 @@ public class MonitorStatusWorker : BackgroundService
                 {
                     var monitorSitesService = serviceScope.ServiceProvider.GetRequiredService<MonitorSitesStatusService>();
 
-                    spentTime = await monitorSitesService.MonitorAllAsync();
+                    spentTime = await monitorSitesService.MonitorAll();
                 }
             }
             catch (Exception e)
