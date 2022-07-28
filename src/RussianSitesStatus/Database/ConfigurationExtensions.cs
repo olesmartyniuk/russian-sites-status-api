@@ -9,7 +9,8 @@ public static class ConfigurationExtensions
                $"Host={uri.Host};" + 
                $"Database={uri.Path.Remove(0,1)};" + 
                $"Username={uri.UserName};" + 
-               $"Password={uri.Password};";
+               $"Password={uri.Password};" +
+               "Timeout=600;CommandTimeout=600;";
         
         if (uri.Host != "localhost" && uri.Host != "127.0.0.1")
         {

@@ -258,7 +258,7 @@ public class DatabaseStorage
         await _db.SaveChangesAsync();
     }
 
-    public async Task<DateTime?> GetOldestCheckSiteDate()
+    public async Task<DateTime?> GetMinCheckedAt()
     {
         var commandText = @"SELECT MIN(checked_at) FROM checks;";
 
@@ -390,7 +390,7 @@ public class DatabaseStorage
         await _db.SaveChangesAsync();
     }
 
-    public async Task DeleteStatistis(DateTime endDate)
+    public async Task DeleteChecksBefore(DateTime endDate)
     {
         var commandText = @"DELETE FROM checks WHERE checked_at < @end_date;";
 
@@ -398,7 +398,7 @@ public class DatabaseStorage
         await _db.Database.ExecuteSqlRawAsync(commandText, endDateParam);
     }
 
-    public async Task<DateTime?> GetNewestStatistisDate()
+    public async Task<DateTime?> GetMaxStatistisDay()
     {
         var commandText = @"SELECT MAX(day) FROM checks_statistics;";
 

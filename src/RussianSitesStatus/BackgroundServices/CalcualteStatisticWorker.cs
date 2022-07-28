@@ -1,19 +1,18 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Services;
-using System.Diagnostics;
 using System.Globalization;
 
 namespace RussianSitesStatus.BackgroundServices;
 
-public class CalcualteStatisticWorker : BackgroundService
+public class ArchiveStatisticWorker : BackgroundService
 {
     private readonly ILogger<MonitorStatusWorker> _logger;
-    private readonly CalculateStatisticService _calculateStatisticService;
-    private IConfiguration _configuration;
+    private readonly ArchiveStatisticService _calculateStatisticService;
+    private readonly IConfiguration _configuration;
 
-    public CalcualteStatisticWorker(
+    public ArchiveStatisticWorker(
         ILogger<MonitorStatusWorker> logger,
-        CalculateStatisticService calculateStatisticsService,
+        ArchiveStatisticService calculateStatisticsService,
         IConfiguration configuration)
     {
         _logger = logger;
@@ -27,27 +26,19 @@ public class CalcualteStatisticWorker : BackgroundService
         {
             return;
         }
-
-        var spentTime = 0;
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(calculateAt.WaitTimeSpan(), stoppingToken);
             try
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
-                await _calculateStatisticService.SaveStatistic();
-
-                timer.Stop();
-                spentTime = (int)timer.Elapsed.TotalSeconds;
+                await _calculateStatisticService.ArchiveStatistic();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception while fetching statuses");
+                _logger.LogError(ex, $"{nameof(ArchiveStatisticWorker)}: Unhandled exception while fetching statuses");
             }
-            _logger.LogInformation($"{nameof(CalcualteStatisticWorker)}: executed iteration in {spentTime} seconds.");
-
+            
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
     }
