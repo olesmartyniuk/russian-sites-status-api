@@ -90,7 +90,7 @@ static void AddServices(WebApplicationBuilder builder)
     services.AddSingleton<IFetchDataService, FetchDataService>();
     services.AddTransient<MonitorSitesStatusService>();
     services.AddTransient<ICheckSiteService, CheckSiteService>();
-    services.AddSingleton<ArchiveService>();
+    services.AddSingleton<CleanupChecksService>();
 
     services.AddScoped<DatabaseStorage>();
     services.AddTransient<ISyncSitesService, SyncSitesDatabaseService>();

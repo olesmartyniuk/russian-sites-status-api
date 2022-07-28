@@ -1,6 +1,5 @@
 using RussianSitesStatus.Extensions;
 using RussianSitesStatus.Services;
-using System.Diagnostics;
 using System.Globalization;
 
 namespace RussianSitesStatus.BackgroundServices;
@@ -8,13 +7,13 @@ namespace RussianSitesStatus.BackgroundServices;
 public class ArchiveWorker : BackgroundService
 {
     private readonly ILogger<MonitorStatusWorker> _logger;
-    private readonly ArchiveService _archiveService;
+    private readonly CleanupChecksService _archiveService;
     private IConfiguration _configuration;
 
     public ArchiveWorker(
         ILogger<MonitorStatusWorker> logger,
         IConfiguration configuration,
-        ArchiveService archiveService)
+        CleanupChecksService archiveService)
     {
         _logger = logger;
         _configuration = configuration;
@@ -28,25 +27,18 @@ public class ArchiveWorker : BackgroundService
             return;
         }
 
-        var spentTime = 0;
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(archiveAt.WaitTimeSpan(), stoppingToken);
+            
             try
             {
-                var timer = new Stopwatch();
-                timer.Start();
-
                 await _archiveService.ArchiveOldData();
-
-                timer.Stop();
-                spentTime = (int)timer.Elapsed.TotalSeconds;
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Unhandled exception while archiving data");
-            }
-            _logger.LogInformation($"{nameof(ArchiveWorker)}: executed iteration in {spentTime} seconds.");
+                _logger.LogError(e, $"{nameof(ArchiveWorker)}: Unhandled exception: {e}");
+            }            
 
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
         }
