@@ -11,7 +11,7 @@ public class CleanupChecksService
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    public async Task<bool> ArchiveOldData()
+    public async Task<bool> CleanupOldData()
     {
         using var serviceScope = _serviceScopeFactory.CreateScope();
 

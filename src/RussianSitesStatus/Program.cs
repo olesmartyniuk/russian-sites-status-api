@@ -94,14 +94,14 @@ static void AddServices(WebApplicationBuilder builder)
 
     services.AddScoped<DatabaseStorage>();
     services.AddTransient<ISyncSitesService, SyncSitesDatabaseService>();
-    services.AddSingleton<CalculateStatisticService>();
+    services.AddSingleton<ArchiveStatisticService>();
 
     services.AddHostedService<MemoryDataFetcher>();
     services.AddHostedService<SyncSitesWorker>();
     services.AddHostedService<MonitorStatusWorker>();
-    services.AddHostedService<CalcualteStatisticWorker>();
+    services.AddHostedService<ArchiveStatisticWorker>();
     services.AddHostedService<StatisticDataFetcher>();
-    services.AddHostedService<ArchiveWorker>();
+    services.AddHostedService<CleanupChecksWorker>();
 
     builder.Services.AddResponseCompression(options =>
     {

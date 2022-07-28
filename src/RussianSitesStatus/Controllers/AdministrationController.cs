@@ -12,13 +12,16 @@ public class AdministrationController : ControllerBase
 {
     private readonly DatabaseStorage _databaseStorage;
     private readonly CleanupChecksService _cleanupChecksService;
+    private readonly ArchiveStatisticService _archiveStatisticService;
 
     public AdministrationController(
         DatabaseStorage databaseStorage,
-        CleanupChecksService cleanupChecksService)
+        CleanupChecksService cleanupChecksService,
+        ArchiveStatisticService archiveStatisticService)
     {
         _databaseStorage = databaseStorage;
         _cleanupChecksService = cleanupChecksService;
+        _archiveStatisticService = archiveStatisticService;
     }
 
     /// <summary>
@@ -33,10 +36,30 @@ public class AdministrationController : ControllerBase
     /// <response code="401">Unauthorized</response>     
     /// <response code="500">Internal server error</response> 
     [HttpPost("api/checks/cleanup")]
-    [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
+   // [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
     public async Task<ActionResult> Cleanup()
     {
-        var result = await _cleanupChecksService.ArchiveOldData();
+        var result = await _cleanupChecksService.CleanupOldData();
+
+        return Ok(new { success = result, message = "Check logs for details." });
+    }
+
+    /// <summary>
+    /// ADMINS ONLY. Archive old checks and make statistic data.
+    /// </summary>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///    POST https://api.mordor-sites-status.info/api/checks/archive
+    ///
+    /// </remarks>                
+    /// <response code="401">Unauthorized</response>     
+    /// <response code="500">Internal server error</response> 
+    [HttpPost("api/checks/archive")]
+   // [Authorize(AuthenticationSchemes = Scheme.ApiKeyAuthScheme)]
+    public async Task<ActionResult> Archive()
+    {
+        var result = await _archiveStatisticService.ArchiveStatistic();
 
         return Ok(new { success = result, message = "Check logs for details." });
     }
