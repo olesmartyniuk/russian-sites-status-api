@@ -160,14 +160,7 @@ static void AddControllers(WebApplicationBuilder builder)
 
 void ConfigureKestrel(WebApplicationBuilder builder)
 {
-    builder.WebHost.UseKestrel((context, options) =>
-    {
-        var port = Environment.GetEnvironmentVariable("PORT");
-        if (!string.IsNullOrEmpty(port))
-        {
-            options.ListenAnyIP(int.Parse(port));
-        }
-    });
+    builder.WebHost.UseKestrel();
 }
 
 void ConfigureHttpPipeline(WebApplication app)
