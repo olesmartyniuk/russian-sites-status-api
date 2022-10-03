@@ -60,7 +60,7 @@ jobs:
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'MAX_SITES_IN_QUEUE'
-        valuetoset: '100'
+        valuetoset: '200'
     - name: Update MAX_SITES_IN_WAIT_QUEUE setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:

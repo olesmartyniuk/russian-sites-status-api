@@ -99,7 +99,7 @@ public class MonitorSitesStatusService
                     var delay = _reservedTimeForExecution - earliest;
                     if (delay > 0 && waitedTasks <= _maxSitesInWaitQueue)
                     {
-                        _logger.LogInformation($"{site.Name} delay = {delay} seconds");
+                        //_logger.LogInformation($"{site.Name} delay = {delay} seconds");
                         Interlocked.Increment(ref waitedTasks);
                         await Task.Delay(TimeSpan.FromSeconds(delay));
                         Interlocked.Decrement(ref waitedTasks);
@@ -107,7 +107,7 @@ public class MonitorSitesStatusService
 
                     if (waitedTasks >= _maxSitesInWaitQueue)
                     {
-                        _logger.LogInformation($"NoSenseToWait waitedTasks ={ waitedTasks }");
+                        //_logger.LogInformation($"NoSenseToWait waitedTasks ={ waitedTasks }");
                     }
                 }
 
