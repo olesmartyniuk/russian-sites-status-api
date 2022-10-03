@@ -60,7 +60,7 @@ jobs:
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'MAX_SITES_IN_QUEUE'
-        valuetoset: '200'
+        valuetoset: '500'
     - name: Update MAX_SITES_IN_WAIT_QUEUE setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
@@ -78,7 +78,7 @@ jobs:
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'SITE_CHECK_SKIP_TAKE'
-        valuetoset: '0,100'
+        valuetoset: '0,2000'
 
     - name: Copy via SSH
       uses: garygrossgarten/github-action-scp@v0.5.3

@@ -54,7 +54,7 @@ public class CheckSiteService : ICheckSiteService
             timer.Start();
             var response = await httpClient.GetAsync(site.Url);
             statusCode = (int)response.StatusCode;
-            _logger.LogInformation($"OK. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Status Code: {statusCode}");
+            //_logger.LogInformation($"OK. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Status Code: {statusCode}");
         }
         catch (TaskCanceledException ex)
         {
@@ -63,7 +63,7 @@ public class CheckSiteService : ICheckSiteService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogInformation($"Proxy is not available. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}");
+            //_logger.LogInformation($"Proxy is not available. Proxy url: {region.ProxyUrl}, Site: {site.Url}, Exception message: {ex.Message}");
         }
         catch (Exception ex)
         {
