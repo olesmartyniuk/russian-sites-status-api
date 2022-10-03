@@ -84,14 +84,14 @@ jobs:
       uses: garygrossgarten/github-action-scp@v0.5.3
       with:
         local: /home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/
-        remote: /var/www/mss-api
+        remote: /var/www/mss-worker
         host: ${{ secrets.HOST_WORKER }}
         username: ${{ secrets.SSH_USER }}
         privateKey: ${{ secrets.PRIVATE_KEY }}
     - name: Run SSH command
       uses: garygrossgarten/github-action-ssh@v0.3.0
       with:
-        command: sudo systemctl restart mss-api
+        command: sudo systemctl restart mss-worker
         host: ${{ secrets.HOST_WORKER }}
         username: ${{ secrets.SSH_USER }}
         privateKey: ${{ secrets.PRIVATE_KEY }}
