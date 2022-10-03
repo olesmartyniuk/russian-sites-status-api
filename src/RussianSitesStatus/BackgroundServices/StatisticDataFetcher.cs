@@ -1,4 +1,3 @@
-using RussianSitesStatus.Models;
 using RussianSitesStatus.Services;
 
 namespace RussianSitesStatus.BackgroundServices;
@@ -6,13 +5,13 @@ namespace RussianSitesStatus.BackgroundServices;
 public class StatisticDataFetcher : BackgroundService
 {
     private readonly StatisticStorage _statisticStorage;
-    private readonly ILogger<MemoryDataFetcher> _logger;    
+    private readonly ILogger<StatisticDataFetcher> _logger;    
     private readonly IConfiguration _configuration;
     private readonly int _memoryDataSyncInterval;
 
     public StatisticDataFetcher(
         StatisticStorage statisticStorage,
-        ILogger<MemoryDataFetcher> logger,
+        ILogger<StatisticDataFetcher> logger,
         IConfiguration configuration
        )
     {

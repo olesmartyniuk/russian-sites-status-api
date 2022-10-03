@@ -1,4 +1,4 @@
-name: Deploy API
+name: Deploy Worker
 
 on: 
   push:
@@ -30,68 +30,68 @@ jobs:
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'ARCHIVE_AT'
-        valuetoset: '02:00:00'
+        valuetoset: ''
     - name: Update CALCULATE_STATISTICS_AT setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'CALCULATE_STATISTICS_AT'
-        valuetoset: '01:00:00'
+        valuetoset: ''
     - name: Update SITES_SYNC_INTERVAL setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'SITES_SYNC_INTERVAL'
-        valuetoset: '900'    
+        valuetoset: ''    
     - name: Update MEMORY_DATA_SYNC_INTERVAL setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'MEMORY_DATA_SYNC_INTERVAL'
-        valuetoset: '100'
+        valuetoset: ''
     - name: Update SITE_CHECK_INTERVAL setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'SITE_CHECK_INTERVAL'
-        valuetoset: ''
+        valuetoset: '600'
     - name: Update MAX_SITES_IN_QUEUE setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'MAX_SITES_IN_QUEUE'
-        valuetoset: ''
+        valuetoset: '2000'
     - name: Update MAX_SITES_IN_WAIT_QUEUE setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'MAX_SITES_IN_WAIT_QUEUE'
-        valuetoset: ''
+        valuetoset: '100'
     - name: Update SITE_CHECK_PAUSE_BEFORE_START setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'SITE_CHECK_PAUSE_BEFORE_START'
-        valuetoset: ''
+        valuetoset: '5'
     - name: Update SITE_CHECK_SKIP_TAKE setting
       uses: benday-inc/set-property-value-in-appsettings@main
       with:
         pathtosettingsfile: '/home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/appsettings.json'
         keyname1: 'SITE_CHECK_SKIP_TAKE'
-        valuetoset: ''
+        valuetoset: '0,2000'
 
     - name: Copy via SSH
       uses: garygrossgarten/github-action-scp@v0.5.3
       with:
         local: /home/runner/work/russian-sites-status-api/russian-sites-status-api/deploy/
         remote: /var/www/mss-api
-        host: ${{ secrets.HOST_API }}
+        host: ${{ secrets.HOST_WORKER }}
         username: ${{ secrets.SSH_USER }}
         privateKey: ${{ secrets.PRIVATE_KEY }}
     - name: Run SSH command
       uses: garygrossgarten/github-action-ssh@v0.3.0
       with:
         command: sudo systemctl restart mss-api
-        host: ${{ secrets.HOST_API }}
+        host: ${{ secrets.HOST_WORKER }}
         username: ${{ secrets.SSH_USER }}
         privateKey: ${{ secrets.PRIVATE_KEY }}
