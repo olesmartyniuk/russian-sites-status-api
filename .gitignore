@@ -39,7 +39,8 @@ msbuild.wrn
 src/Zbyrach.Api/Logs/
 
 # VS Code
-.vscode/launch.json
+**/.vscode
 
 appsettings.Development.json
 appsettings.Prod.json
+
