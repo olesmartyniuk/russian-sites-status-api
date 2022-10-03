@@ -63,6 +63,8 @@ static void CreateDbIfNotExist(WebApplication app)
 
 static void AddServices(WebApplicationBuilder builder)
 {
+    builder.Host.UseSystemd();
+
     var services = builder.Services;
 
     services.AddDbContext<ApplicationContext>(options =>
