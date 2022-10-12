@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi.Models;
@@ -156,6 +157,10 @@ static void AddControllers(WebApplicationBuilder builder)
 {
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSpaStaticFiles(configuration =>
+    {
+        configuration.RootPath = "..//..//UI//dist";
+    });
 }
 
 void ConfigureKestrel(WebApplicationBuilder builder)
@@ -164,11 +169,25 @@ void ConfigureKestrel(WebApplicationBuilder builder)
 }
 
 void ConfigureHttpPipeline(WebApplication app)
-{
+{    
+    app.UseStaticFiles();
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseSpaStaticFiles();
+    }
+    app.UseRouting();
+    app.UseSpa(spa =>
+    {
+        spa.Options.SourcePath = "..//..//UI";
+        if (app.Environment.IsDevelopment())
+        {
+            spa.UseAngularCliServer(npmScript: "start");
+        }
+    });
+
     app.UseResponseCompression();
     app.UseCors("CorsPolicy");
     app.UseSwagger();
-
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mordor sites status API");
