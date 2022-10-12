@@ -1,0 +1,63 @@
+<mat-card>
+    <mat-card-title>
+        <div *ngIf="statistics.data.uptime !== null">
+            Uptime {{ statistics.data.uptime }}%
+        </div>
+        <div *ngIf="statistics.data.uptime === null">
+            Uptime unknown
+        </div>
+    </mat-card-title>
+    <mat-card-content>
+        <div *ngIf="statistics" class="container navigation">
+            <div class="row">
+                <div class="col-6 pl-0">
+                    <div class="container">
+                        <div class="row">
+                            <div *ngFor="let period of statistics.periods" class="mr-3">
+                                <button type="button" mat-raised-button (click)="periodClick(period.url)">
+                                    <div [ngClass]="{'text-bold': period.current}">
+                                        {{ period.name }}
+                                    </div>                                  
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 pr-0">
+                    <div class="container">
+                        <div class="row float-right">
+                            <div class="ml-3">
+                                <button type="button" mat-raised-button (click)="periodClick(statistics.navigation.prev.url)">
+                                    <div>
+                                        {{ statistics.navigation.prev.name }}
+                                    </div>                                  
+                                </button>
+                            </div>
+                            <div class="ml-3 mt-2">
+                                <div class="text-bold">
+                                    {{ statistics.navigation.current.name }}
+                                </div>
+                            </div>
+                            <div class="ml-3">
+                                <button type="button" mat-raised-button (click)="periodClick(statistics.navigation.next.url)">
+                                    <div>
+                                        {{ statistics.navigation.next.name }}
+                                    </div>                                  
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="statistics && statistics.data.uptime !== null" id="chart-parent">
+            <ngx-charts-bar-vertical-stacked [view]="" [scheme]="colorScheme" [results]="chartData" [xAxis]="true" [animations]="true">
+            </ngx-charts-bar-vertical-stacked>
+        </div>
+
+        <div *ngIf="statistics && statistics.data.uptime === null">
+            <div id="no-data">No data</div>
+        </div>
+    </mat-card-content>
+</mat-card>

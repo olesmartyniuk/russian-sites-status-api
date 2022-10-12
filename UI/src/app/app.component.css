@@ -1,0 +1,27 @@
+::ng-deep html {
+  height: 100%;
+}
+
+::ng-deep body {
+  background-color: #525659;
+  font-family: sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  color: black;
+}
+
+.page {
+  max-width: 796px;
+  min-height: 100%;
+  margin: 0 auto;
+  background-color: #FFFFFF;
+  border: 1px solid #576987;
+  box-sizing: border-box;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.logo {
+  width: 66px;
+  height: 66px;
+}

@@ -1,0 +1,10 @@
+server {
+  listen $PORT default_server;
+  server_name dev-russian-sites-status-api.herokuapp.com;
+
+  location / {
+    root   /usr/share/nginx/html;
+    index  index.html;
+    try_files $uri $uri/ /index.html;
+  }
+}

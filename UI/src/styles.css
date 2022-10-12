@@ -1,0 +1,33 @@
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.upStyle .mat-badge-content,
+.upStyle .mat-chip
+{
+  background-color: green;
+  color: white;
+}
+
+.downStyle .mat-badge-content,
+.downStyle .mat-chip
+{
+  background-color: red;
+  color: white;
+}
+
+.upDownStyle .mat-badge-content,
+.upDownStyle .mat-chip
+{
+  background-color: gray;
+  color: white;
+}

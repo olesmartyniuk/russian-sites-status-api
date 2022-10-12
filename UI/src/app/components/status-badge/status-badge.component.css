@@ -1,0 +1,25 @@
+div {
+    display: inline-flex;
+    padding: 7px 12px;
+    border-radius: 20px;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    height: 1px;
+    min-width: 56px;
+}
+
+.up {
+    background-color: green;
+    color: white;
+}
+
+.down {
+    background-color: red;
+    color: white;
+}
+
+.none {
+    background-color: gray;
+    color: white;
+}

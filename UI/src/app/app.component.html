@@ -1,0 +1,35 @@
+﻿<div class="container page">
+
+    <!-- Header -->
+    <div class="row justify-content-between align-items-center header">
+        <div class="col-1">
+            <a routerLink="/sites" class="navbar-brand">
+                <img class="logo" src="/assets/img/logo-main.jpg">
+            </a>
+        </div>
+        <div class="col-7 text-left d-flex align-items-center">
+            <div class="pl-4 pt-3 m-0">
+                <h1>Mordor sites status</h1>
+            </div>
+        </div>
+        <div class="col-4 text-right d-flex align-items-center">
+            <div class="container">
+                <div class="h5">
+                    <a href="https://api.mordor-sites-status.info/" target="_blank">
+            API Documentation
+          </a>
+                </div>
+                <div>
+                    <a routerLink="/about">About site</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="row body">
+        <div class="col">
+            <router-outlet></router-outlet>
+        </div>
+    </div>
+</div>

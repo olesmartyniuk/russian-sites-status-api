@@ -1,0 +1,25 @@
+.siteListComponent {
+    margin-bottom: 20px;
+}
+
+.siteListComponent table {
+    width: 100%;
+}
+
+.siteListComponent table tr {
+    cursor: pointer;
+}
+
+.siteListComponent table th {
+    font-weight: bold;
+}
+
+.siteListComponent .siteName {
+    font-weight: bold;
+}
+
+.siteListComponent mat-chip {
+    width: 50px;
+    display: flex;
+    justify-content: center;
+}

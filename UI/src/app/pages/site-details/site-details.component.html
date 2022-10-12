@@ -1,0 +1,63 @@
+<div *ngIf="isError">
+    <h1>Server error</h1>
+    <b>{{ error }}</b>
+    <br><br>
+    <b>Reload the page</b>
+</div>
+
+<div *ngIf="!isError" class="site">
+    <mat-card class="description" *ngIf="site">
+        <mat-card-title>
+            <div>
+                <a target="_blank" href="http://{{site.name}}" class="mr-2">{{ site.name }}</a>
+                <rss-status-badge [status]="site.status"></rss-status-badge>
+                <small>
+                    <a target="_blank" href="https://api.mordor-sites-status.info/api/sites/{{site.id}}" class="ml-2">json</a>
+                </small>
+            </div>
+        </mat-card-title>
+        <mat-card-content>
+            <button type="button" mat-raised-button (click)="back()" class="backButton">
+                Return
+            </button>
+            <span>Last checked {{ getReadableTime(site.lastTestedAt) }}</span>
+        </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+        <mat-card-title>
+            Availability worldwide
+        </mat-card-title>
+        <mat-card-content>
+            <table *ngIf="site && site.servers" mat-table [dataSource]="site.servers" class='serverListTable'>
+                <ng-container matColumnDef="region">
+                    <th mat-header-cell *matHeaderCellDef> Region </th>
+                    <td mat-cell *matCellDef="let server">
+                        {{ server.region }}
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef> Status </th>
+                    <td mat-cell *matCellDef="let server">
+                        <rss-status-badge [status]="server.status">
+                        </rss-status-badge>
+                    </td>
+                </ng-container>
+
+                <ng-container matColumnDef="time">
+                    <th mat-header-cell *matHeaderCellDef> Time / Error </th>
+                    <td mat-cell *matCellDef="let server">
+                        {{getTime(server)}}
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+            </table>
+        </mat-card-content>
+    </mat-card>
+
+    <app-site-statistic [siteId]="site.id" *ngIf="site"></app-site-statistic>
+</div>
